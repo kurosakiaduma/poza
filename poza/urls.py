@@ -15,15 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-import os 
+from chat.views import Ajax
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("chat/",include("chat.urls")),
-    path("", include("bookings.url"))
-]
-
-STATIC_URL = 'static/'
-STATICFILES_DIRS=[
-    os.path.join(BASE_DIR, 'chat/static'),
+    path("", include("booking.urls")),
+    path('ajax', Ajax, name='ajax')
 ]
