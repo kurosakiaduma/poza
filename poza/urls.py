@@ -14,8 +14,16 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+import os 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("chat/",include("chat.urls")),
+    path("", include("bookings.url"))
+]
+
+STATIC_URL = 'static/'
+STATICFILES_DIRS=[
+    os.path.join(BASE_DIR, 'chat/static'),
 ]
