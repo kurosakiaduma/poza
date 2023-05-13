@@ -203,7 +203,7 @@ def validWeekday(days):
     for i in range (0, days):
         x = today + timedelta(days=i)
         y = x.strftime('%A')
-        if y == 'Monday' or y == 'Saturday' or y == 'Wednesday':
+        if y not in ['Friday', 'Sunday']:
             weekdays.append(x.strftime('%Y-%m-%d'))
     return weekdays
     
@@ -225,7 +225,7 @@ def checkTime(times, day):
 def checkEditTime(times, day, id):
     #Only show the time of the day that has not been selected before:
     x = []
-    appointment = Appointment.objects.get(pk=id)
+    appointment = Appointment.objects.get(app_id=id)
     time = appointment.time
     for k in times:
         if Appointment.objects.filter(day=day, time=k).count() < 1 or time == k:

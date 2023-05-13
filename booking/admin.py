@@ -4,4 +4,5 @@ from chat.models import Chat
 
 admin.site.register(Appointment)
 admin.site.register(Doctor)
+admin.site.register(Patient)
 admin.site.register(Chat)

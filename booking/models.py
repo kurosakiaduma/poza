@@ -1,12 +1,41 @@
 from django.db import models
-from datetime import datetime
+from datetime import datetime, date
 from django.core.validators import *
-from django.contrib.admin import ModelAdmin
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from django.forms import ValidationError
+from django.contrib.auth.models import AbstractBaseUser, AbstractUser, PermissionsMixin, BaseUserManager
+from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from random import randint
 import PIL.Image, imageio
+    
+class PatientManager(BaseUserManager):
+    """ Manager for patient profiles """
+    use_in_migrations = True
+     
+    def _create_user(self, email, password, is_superuser, birth_date, phone_no, **extra_fields):
+        """ Create a new user profile """
+        if not email:
+            raise ValueError('User must have an email address')
+        
+        email = self.normalize_email(email)
+        user = self.model(email=email, password=password, is_superuser=is_superuser, birth_date=birth_date, phone_no=phone_no, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        
+        return user
+
+    def create_superuser(self, email, password, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        user = self._create_user(email=email, password=password, is_superuser=True, birth_date=date(1990, 1, 1), phone_no="0711111111")
+        
+        return user
 
 SERVICE_CHOICES = (
     ("1", "Adult Cardiology"),
@@ -43,39 +72,53 @@ GENDER_CHOICES = (
     ("Non-Binary", "Non-Binary"),
     ("Prefer Not To Say","Prefer Not To Say")
 )
-    
-class Patient(models.Model):
-    uuid = models.CharField(max_length=10, unique=True, blank=True, null=True)
-    name = models.TextField(max_length=50, null=False)
-    birth_date = models.DateField(null=False, blank=True)
-    email = models.EmailField(max_length=255, unique=True, validators=[EmailValidator(message="Please enter a valid email address in the format")], default="name@name.name")
-    gender = models.CharField(choices=GENDER_CHOICES, null=False, max_length=20)
+class Patient(AbstractUser, PermissionsMixin):
+    name = models.CharField(max_length=50, null=False)
+    email = models.EmailField(max_length=255, unique=True, validators=[EmailValidator(message="Please enter a valid email address in the format"), RegexValidator(regex='^name@name.name', inverse_match=True, message="Please provide a valid email address.")])
+    birth_date = models.DateField(null=False)
+    gender = models.CharField(choices=GENDER_CHOICES, default="Prefer Not To Say", max_length=20)
     phone_no = models.IntegerField(null=False)
     account_type = models.CharField(max_length=10, default='PATIENT', editable=False)
-    kin_name = models.TextField(max_length=50, null=True)
-    kin_contact = models.IntegerField(null=True)
+    kin_name = models.CharField(max_length=50, help_text="Optional", null=True, blank=True)
+    kin_contact = models.IntegerField(help_text="Optional", null=True, blank=True)
+    password = models.CharField(max_length=30, validators=[MinLengthValidator(limit_value=8, message="Please ensure the password is at least 8 characters"), RegexValidator(regex='^password', inverse_match=True, message="Please use a different password")], default="password")
+    is_superuser = models.BooleanField(default=False, editable=False)
+    is_active = models.BooleanField(default=True)
+    last_update = models.DateTimeField(_('last updated'), auto_now=True)
+
+    objects = PatientManager()
     
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['password']
+    
+    def __str__(self):
+        return self.email
+    
+    def save(self, *args, **kwargs):
+        while True:
+            if (datetime.today().date() - self.birth_date).days < 6390:
+                raise ValidationError(f"You are a {(datetime.today().date() - self.birth_date).days} year old. Account holders should be adults who have attained at least 18 years of age.")
+            if Patient.objects.filter(email = self).count() < 1:
+                break
+            
+        super().save(*args, **kwargs)    
 
-@receiver(post_save, sender=Patient)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Patient.objects.create(user=instance)
 
-@receiver(post_save, sender=Patient)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+
 
 class Appointment(models.Model):
-    uuid = models.ForeignKey(Patient, on_delete=models.CASCADE, null=True, blank=True)
+    email = models.ForeignKey(Patient, on_delete=models.CASCADE, null=True, blank=True)
+    app_id = models.BigAutoField(primary_key=True, default="0")
     service = models.CharField(max_length=50, choices=SERVICE_CHOICES, default="Physician / Internal Medicine")
     day = models.DateField(default=datetime.now)
     time = models.CharField(max_length=10, choices=TIME_CHOICES, default="3 PM")
     time_ordered = models.DateTimeField(default=datetime.now, blank=True)
+    note = models.TextField(max_length=255, null=True)
     def __str__(self):
-        return f"{self.user.username} | day: {self.day} | time: {self.time}"
+        return f"{self.user.name} | day: {self.day} | time: {self.time}"
 
 
-class Doctor(models.Model):
+class Doctor(AbstractBaseUser):
     uuid = models.CharField(max_length=2, unique=True, blank=True, null=True)
     password = models.CharField(max_length=30, validators=[MinLengthValidator(limit_value=8, message="Please ensure the password is at least 8 characters"), RegexValidator(regex='/password')], default="password")
     name = models.CharField(max_length=255)
@@ -84,6 +127,7 @@ class Doctor(models.Model):
     account_type = models.CharField(max_length=10, default='DOCTOR', editable=False)
     role = models.CharField(max_length=50, choices=SERVICE_CHOICES, null=False)
     image = models.ImageField(upload_to='uploads/%Y/%m/%d/', blank=True, null=True)
+    last_login = models.DateTimeField()
 
     def __str__(self):
         return self.name
