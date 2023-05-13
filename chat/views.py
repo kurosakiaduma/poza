@@ -3,7 +3,9 @@ from django.shortcuts import render
 from .models import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+
 import openai
+
 
 def chat(request):
     chats = Chat.objects.all()
@@ -22,12 +24,12 @@ def Ajax(request):
         res = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": '''You are MediBot, a chatbot curated to only provide factual responses related to medical topics or questions 
-             and I'll do my best to provide you with accurate information. For every response, end with a note that the patient
-             must always show up for any scheduled appointments to receive quality care at the hands of
-             qualified physicians.'''},
+            {"role": "system", "content": '''You are MediBot, a chatbot curated to only provide factual responses related to medical topics or \
+                questions and I'll do my best to provide you with accurate information. For every response, end with a note that the patient \
+                    must always show up for any scheduled appointments to receive quality care at the hands of qualified physicians.'''},
             {"role": "user", "content": f"{text}"}
-        ]
+        ],
+        temperature = 0 # this value depicts the randomness of the model's output
         )
 
         response = res.choices[0].message["content"]

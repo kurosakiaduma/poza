@@ -3,6 +3,5 @@ from .views import *
 
 
 urlpatterns = [
-    path('', chat, name='chat'),
-    path('ajax/', Ajax, name='ajax'),
+    path('', chat, name='chat')
 ]
