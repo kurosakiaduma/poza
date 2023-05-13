@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "booking" ,#Booking
-    "chat" #MediBot microservice
+    "chat", #MediBot microservice
+    "members", #Registration service
 ]
 
 MIDDLEWARE = [
@@ -52,6 +53,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "poza.urls"
+
+AUTH_USER_MODEL = 'booking.Persona'
 
 TEMPLATES = [
     {
@@ -119,9 +122,15 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS=[
-    os.path.join(BASE_DIR, 'chat/static'),
+    os.path.join(BASE_DIR, 'chat\static'),
 ]
 
+# Authentication Backends
+#
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'members.customauthbackend.EmailAuthBackend',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field

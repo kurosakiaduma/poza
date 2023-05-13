@@ -21,5 +21,11 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("chat/",include("chat.urls")),
     path("", include("booking.urls")),
+    path("members", include("django.contrib.auth.urls")),
+    path("members", include("members.urls")),
     path('ajax', Ajax, name='ajax')
 ]
+
+#Configuring admin titles
+
+admin.site.site_header = "Poza Specialist Clinic Admin"
