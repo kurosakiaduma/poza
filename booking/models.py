@@ -6,22 +6,28 @@ from django.contrib.auth.models import AbstractBaseUser, AbstractUser, Permissio
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from random import randint
-import PIL.Image, imageio
-    
+import PIL.Image, imageio, uuid
+
 class PatientManager(BaseUserManager):
-    """ Manager for patient profiles """
+    """ Manager for all user profiles """
     use_in_migrations = True
      
-    def _create_user(self, email, password, is_superuser, birth_date, phone_no, **extra_fields):
+    def _create_user(self, email, password, is_superuser, birth_date, phone_no, is_staff, **extra_fields):
         """ Create a new user profile """
         if not email:
             raise ValueError('User must have an email address')
         
         email = self.normalize_email(email)
-        user = self.model(email=email, password=password, is_superuser=is_superuser, birth_date=birth_date, phone_no=phone_no, **extra_fields)
+        user = self.model(email=email, password=password, is_superuser=is_superuser, birth_date=birth_date, phone_no=phone_no, is_staff=is_staff, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         
+        return user
+    def create_user(self, email, password,**extra_fields):
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        
+        user = self._create_user(email=email, password=password, **extra_fields)
         return user
 
     def create_superuser(self, email, password, **extra_fields):
@@ -33,10 +39,12 @@ class PatientManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
-        user = self._create_user(email=email, password=password, is_superuser=True, birth_date=date(1990, 1, 1), phone_no="0711111111")
+        user = self._create_user(email=email, password=password, birth_date=date(1990, 1, 1), phone_no="0711111111", **extra_fields)
         
         return user
-
+'''
+User-input choices for the Booking-Appointment logic
+'''
 SERVICE_CHOICES = (
     ("1", "Adult Cardiology"),
     ("2", "Adult Neurology"),
@@ -65,24 +73,46 @@ TIME_CHOICES = (
     ("7 PM", "7 PM"),
     ("7:30 PM", "7:30 PM"),
 )
-
 GENDER_CHOICES = (
     ("Male","Male"),
     ("Female", "Female"),
     ("Non-Binary", "Non-Binary"),
     ("Prefer Not To Say","Prefer Not To Say")
 )
-class Patient(AbstractUser, PermissionsMixin):
+
+# Restriction choices
+ACCOUNT_CHOICES=(
+    ("ADMIN", "ADMIN"),
+    ("DOCTOR", "DOCTOR"),
+    ("PATIENT", "PATIENT"),
+)
+
+# Age validator function    
+def at_least_age_18(value):
+    today = date.today()
+    age = (
+        today.year
+        - value.year
+        - ((today.month, today.day) < (value.month, value.year))
+    )
+    if age < 18:
+        raise ValidationError(
+            f'You are a {age} year old. Account holders should be adults who have attained at least 18 years of age.'
+        )
+
+class Persona(AbstractUser, PermissionsMixin):
+    uuid = models.UUIDField(primary_key=True, auto_created=True, default=uuid.uuid4())
+    username = None
     name = models.CharField(max_length=50, null=False)
     email = models.EmailField(max_length=255, unique=True, validators=[EmailValidator(message="Please enter a valid email address in the format"), RegexValidator(regex='^name@name.name', inverse_match=True, message="Please provide a valid email address.")])
-    birth_date = models.DateField(null=False)
+    birth_date = models.DateField(null=False, validators=[at_least_age_18])
     gender = models.CharField(choices=GENDER_CHOICES, default="Prefer Not To Say", max_length=20)
     phone_no = models.IntegerField(null=False)
-    account_type = models.CharField(max_length=10, default='PATIENT', editable=False)
-    kin_name = models.CharField(max_length=50, help_text="Optional", null=True, blank=True)
-    kin_contact = models.IntegerField(help_text="Optional", null=True, blank=True)
+    account_type = models.CharField(max_length=10, choices=ACCOUNT_CHOICES, default='PATIENT')
+    kin_name = models.CharField(max_length=50, help_text="*Optional", null=True, blank=True)
+    kin_contact = models.IntegerField(help_text="*Optional", null=True, blank=True)
     password = models.CharField(max_length=30, validators=[MinLengthValidator(limit_value=8, message="Please ensure the password is at least 8 characters"), RegexValidator(regex='^password', inverse_match=True, message="Please use a different password")], default="password")
-    is_superuser = models.BooleanField(default=False, editable=False)
+    is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     last_update = models.DateTimeField(_('last updated'), auto_now=True)
 
@@ -92,22 +122,22 @@ class Patient(AbstractUser, PermissionsMixin):
     REQUIRED_FIELDS = ['password']
     
     def __str__(self):
+        return self.email    
+
+
+class Doctor(Persona):
+    account_type = ACCOUNT_CHOICES[1]
+    role = models.CharField(max_length=50, choices=SERVICE_CHOICES, null=False)
+    image = models.ImageField(upload_to='uploads/%Y/%m/%d/', blank=True, null=True)
+    def __str__(self):
         return self.email
-    
-    def save(self, *args, **kwargs):
-        while True:
-            if (datetime.today().date() - self.birth_date).days < 6390:
-                raise ValidationError(f"You are a {(datetime.today().date() - self.birth_date).days} year old. Account holders should be adults who have attained at least 18 years of age.")
-            if Patient.objects.filter(email = self).count() < 1:
-                break
-            
-        super().save(*args, **kwargs)    
 
-
+    def get_absolute_url(self):
+        return reverse('doctor-detail', kwargs={'pk': self.uuid})
 
 
 class Appointment(models.Model):
-    email = models.ForeignKey(Patient, on_delete=models.CASCADE, null=True, blank=True)
+    uuid = models.ForeignKey(Persona, on_delete=models.CASCADE, null=True, blank=True)
     app_id = models.BigAutoField(primary_key=True, default="0")
     service = models.CharField(max_length=50, choices=SERVICE_CHOICES, default="Physician / Internal Medicine")
     day = models.DateField(default=datetime.now)
@@ -116,28 +146,3 @@ class Appointment(models.Model):
     note = models.TextField(max_length=255, null=True)
     def __str__(self):
         return f"{self.user.name} | day: {self.day} | time: {self.time}"
-
-
-class Doctor(AbstractBaseUser):
-    uuid = models.CharField(max_length=2, unique=True, blank=True, null=True)
-    password = models.CharField(max_length=30, validators=[MinLengthValidator(limit_value=8, message="Please ensure the password is at least 8 characters"), RegexValidator(regex='/password')], default="password")
-    name = models.CharField(max_length=255)
-    email = models.EmailField(max_length=255, unique=True, validators=[EmailValidator(message="Please enter a valid email address in the format")], default="name@name.name")
-    phone_no = models.CharField(max_length=10, unique=True, validators=[RegexValidator(regex='^\d{10}$', message="Please enter a 10-digit number")])
-    account_type = models.CharField(max_length=10, default='DOCTOR', editable=False)
-    role = models.CharField(max_length=50, choices=SERVICE_CHOICES, null=False)
-    image = models.ImageField(upload_to='uploads/%Y/%m/%d/', blank=True, null=True)
-    last_login = models.DateTimeField()
-
-    def __str__(self):
-        return self.name
-
-    def save(self, *args, **kwargs):
-        while True:
-            self.uuid = str(randint(1, 20))
-            if Doctor.objects.filter(uuid = self.uuid).count() < 1:
-                break
-        super().save(*args, **kwargs)
-
-    def get_absolute_url(self):
-        return reverse('doctor-detail', kwargs={'pk': self.pk})

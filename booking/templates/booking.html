@@ -12,15 +12,13 @@
 <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
     <form method="post" action="{% url 'booking' %}" class="me-2 ms-2" required>
         {% csrf_token %}
-
         <!--input service-->
         <div>
             <h3 class="">Select Service:</h3>
             <select class="form-select fs-3" name="service">
-                <option value="Doctor care">Doctor care</option>
-                <option value="Nursing care">Nursing care</option>
-                <option value="Medical social services">Medical social services</option>
-                <option value="Homemaker or basic assistance care">Homemaker or basic assistance care</option>
+                {% for service in services %}
+                <option value="{{service}}">{{service}}</option>
+                {% endfor %}
             </select>
         </div>
             <!--input day-->

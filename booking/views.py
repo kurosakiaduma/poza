@@ -2,11 +2,14 @@ from django.shortcuts import render, redirect
 from datetime import datetime, timedelta
 from .models import *
 from django.contrib import messages
+from .forms import AppointmentForm
 
 def index(request):
     return render(request, "index.html",{})
 
 def booking(request):
+    services = getServices()
+    form = AppointmentForm()
     #Calling 'validWeekday' Function to Loop days you want in the next 21 days:
     weekdays = validWeekday(22)
 
@@ -29,8 +32,10 @@ def booking(request):
 
 
     return render(request, 'booking.html', {
+            'form':form,
             'weekdays':weekdays,
             'validateWeekdays':validateWeekdays,
+            'services': services
         })
 
 def bookingSubmit(request):
@@ -56,7 +61,7 @@ def bookingSubmit(request):
 
         if service != None:
             if day <= maxDate and day >= minDate:
-                if date == 'Monday' or date == 'Saturday' or date == 'Wednesday':
+                if date !="Friday" and date!="Sunday" :
                     if Appointment.objects.filter(day=day).count() < 11:
                         if Appointment.objects.filter(day=day, time=time).count() < 1:
                             AppointmentForm = Appointment.objects.get_or_create(
@@ -231,3 +236,9 @@ def checkEditTime(times, day, id):
         if Appointment.objects.filter(day=day, time=k).count() < 1 or time == k:
             x.append(k)
     return x
+
+def getServices():
+    services=[]
+    for service in SERVICE_CHOICES:
+        services.append(service[1])
+    return services
