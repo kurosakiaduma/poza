@@ -4,7 +4,6 @@ from booking.models import Persona
 from django import forms
 from django.db import models
 
-
 class RegisterUserForm(UserCreationForm):
     email = forms.EmailField(label='Email', widget=forms.EmailInput(attrs={'class':'form-control form-control-lg', 'placeholder': 'example@gmail.com'}))
     name = forms.CharField(label='Name', max_length=50, widget=forms.TextInput(attrs={'class':'form-control form-control-lg'}))
