@@ -51,28 +51,27 @@ SERVICE_CHOICES = (
     ("3", "Anaesthesia"),
     ("4", "Anaesthesia and Critical Care Medicine"),
     ("5", "Dermatology"),
-    ("6, Nose and Throat (ENT)", "Ear, Nose and Throat (ENT)"),
+    ("6", "Ear, Nose and Throat (ENT)"),
     ("7", "General Surgery"),
     ("8", "Gynaecology / Laparoscopic / Obsterics"),
-    ("9", "Nephrology"),
-    ("10", "Ophthalmologist"),
-    ("11", "Paediatrics and Child Health"),
-    ("12", "Pain Management"),
-    ("13", "Physician /Internal Medicine"),
-    ("14", "Radiology"),
+    ("9", "Interventional Cardiology"),
+    ("10", "Nephrology"),
+    ("11", "Ophthalmologist"),
+    ("12", "Paediatrics and Child Health"),
+    ("13", "Pain Management"),
+    ("14", "Physician /Internal Medicine"),
+    ("15", "Radiology"),
     )
 TIME_CHOICES = (
-    ("3 PM", "3 PM"),
-    ("3:30 PM", "3:30 PM"),
-    ("4 PM", "4 PM"),
-    ("4:30 PM", "4:30 PM"),
-    ("5 PM", "5 PM"),
-    ("5:30 PM", "5:30 PM"),
-    ("6 PM", "6 PM"),
-    ("6:30 PM", "6:30 PM"),
-    ("7 PM", "7 PM"),
-    ("7:30 PM", "7:30 PM"),
-)
+    ("8 AM", "8 AM"),
+    ("9 AM", "9 AM"),
+    ("10 AM", "10 AM"),
+    ("11 AM", "11 AM"),
+    ("11:30 AM", "11:30 AM"),
+    ("12 PM", "12 PM"),
+    ("1:30 PM", "1:30 PM"),
+    ("2 PM", "2 PM"),
+    )
 GENDER_CHOICES = (
     ("Male","Male"),
     ("Female", "Female"),
@@ -137,12 +136,12 @@ class Doctor(Persona):
 
 
 class Appointment(models.Model):
-    uuid = models.ForeignKey(Persona, on_delete=models.CASCADE, null=True, blank=True)
-    app_id = models.BigAutoField(primary_key=True, default="0")
+    uuid = models.ForeignKey(Persona, on_delete=models.CASCADE)
+    app_id = models.BigAutoField(primary_key=True)
     service = models.CharField(max_length=50, choices=SERVICE_CHOICES, default="Physician / Internal Medicine")
     day = models.DateField(default=datetime.now)
     time = models.CharField(max_length=10, choices=TIME_CHOICES, default="3 PM")
     time_ordered = models.DateTimeField(default=datetime.now, blank=True)
-    note = models.TextField(max_length=255, null=True)
+    price = models.PositiveIntegerField()
     def __str__(self):
         return f"{self.user.name} | day: {self.day} | time: {self.time}"
