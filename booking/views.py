@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.db.models import Count
 from datetime import datetime, timedelta
 from .models import *
 from django.contrib import messages
@@ -89,11 +90,38 @@ def service_times(service):
 def index(request):
     return render(request, "index.html",{})
 
+def assign_doctor(appears, doctors):
+    """Logic for assigning a doctor. I obtain a frequency queryset from the 
+        appointments object on 'assigned_doctor', filter out values that have not appeared global least
+        and randomly select the the index value of the remaining values in the doctors list 
+    """
+    for i, j in appears.items():
+        if j != min(appears.values()):
+            try:
+                doctors.remove(i)
+            except ValueError:
+                pass
+        
+            
+    if len(doctors) == 1:
+        assigned_doctor = doctors[0]
+    else:
+        try:
+            from random import randint
+            idx = randint(0, (len(doctors)-1))            
+            assigned_doctor = doctors[idx]
+        except IndexError:
+            pass
+    return assigned_doctor    
+            
+
+
 def booking(request):
     
     """Function that applies the necessar business logic required in booking only available time slots within a 21-day period"""
     #Calling 'getServices' function to retrieve a list of all the available services
     services = getServices()
+    assigned_doctor = ""
     times = {}
 
     if request.method == 'POST':
@@ -117,25 +145,39 @@ def booking(request):
         
         #Filter to retrieve only available times from each date before displaying them to the user
         appointments = Appointment.objects.filter(service=service)
-        doctors = Doctor.objects.filter(role=service)
+        
+        #Retrieve Doctor names from the filtered Doctor objects
+        doctors= []
+        service_doctors = Doctor.objects.filter(role=service).values_list("name") 
+        appears = appointments.values_list('assigned_doctor').annotate(frequency = Count('assigned_doctor'))
+        
+        for doctor in service_doctors:
+            doctors.append(doctor[0])
+
+        appears = dict(appears)
+        
+        assigned_doctor = assign_doctor(appears=appears, doctors=doctors)
+        
+        print(f"{appears} {doctors}\nASSIGNED DOCTOR-> {assigned_doctor}")
         
         
-    
         for item in appointments:
-            print(item.day, item.time, item.price)
+            print(item.service, item.assigned_doctor, item.day)
     
-        if appointments.exists():
+        if appointments.exists():    
             for item in appointments:
                 appointment_date = item.day
                 appointment_day = dayToWeekday(str(appointment_date))
                 if appointment_date in [date.split()[0] for date in validWorkdays]:    
                     validWorkdays.remove(appointment_date+' '+appointment_day+' '+item.time)
                     pass
+                
         
-        print(f"{validWorkdays}, \nTHE DOCTORS ARE:{doctors}")
+        print(f"THE APPOINTMENT FORMAT {appointments}, \nTHE DOCTORS ARE:{doctors}")
     
         #Store day, service and times data in django session:
         request.session['service'] = service
+        request.session['assigned_doctor'] = assigned_doctor
         request.session['times'] = times
         request.session['validWorkdays'] = validWorkdays
         
@@ -159,6 +201,7 @@ def bookingSubmit(request):
     #Get stored data from django session:
     service = request.session.get('service')
     validWorkdays = request.session.get('validWorkdays')
+    assigned_doctor = request.session.get('assigned_doctor')
     
     #Handle pricing on a seperate thread
     if service in ["Nephrology", "Physician /Internal Medicine", "Ear, Nose and Throat (ENT)","Dermatology", "Adult Neurology", "General Surgery", "Paediatrics and Child Health", "Pain Management", "Gynaecology / Laparoscopic / Obsterics", "Ophthalmology", "Radiology"]:
@@ -189,6 +232,7 @@ def bookingSubmit(request):
                             service = service,
                             day = date,
                             time = time,
+                            assigned_doctor = assigned_doctor,
                             uuid = user, 
                             price = price
                             )
@@ -320,9 +364,11 @@ def userUpdateSubmit(request, app_id):
                         if Appointment.objects.filter(day=day, time=time).count() < 1 or userSelectedTime == time:
                             AppointmentForm = Appointment.objects.filter(pk=id).update(
                                 user = user,
+                                doctor_name = [],
                                 service = service,
                                 day = day,
                                 time = time,
+                                
                             ) 
                             messages.success(request, "Appointment Edited!")
                             return redirect('index')
@@ -345,16 +391,21 @@ def userUpdateSubmit(request, app_id):
     })
 
 def staffPanel(request):
+    user = request.user
+    
     today = datetime.today()
     minDate = today.strftime('%Y-%m-%d')
     deltatime = today + timedelta(days=21)
     strdeltatime = deltatime.strftime('%Y-%m-%d')
     maxDate = strdeltatime
+    
     #Only show the Appointments 21 days from today
     items = Appointment.objects.filter(day__range=[minDate, maxDate]).order_by('day', 'time')
 
     return render(request, 'staffPanel.html', {
         'items':items,
+        "user": user,
+        "name": user.name
     })
 def getServices():
     services=[]

@@ -151,11 +151,12 @@ class Doctor(Persona):
 
 class Appointment(models.Model):
     uuid = models.ForeignKey(Persona, on_delete=models.CASCADE)
-    app_id = models.BigAutoField(primary_key=True)
+    app_id = models.BigAutoField(primary_key=True,)
     service = models.CharField(max_length=50, choices=SERVICE_CHOICES, default="Physician / Internal Medicine")
     day = models.DateField(default=datetime.now)
-    time = models.CharField(max_length=10, choices=TIME_CHOICES, default="3 PM")
+    time = models.CharField(max_length=10, choices=TIME_CHOICES)
     time_ordered = models.DateTimeField(default=datetime.now, blank=True)
+    assigned_doctor = models.CharField(max_length=30, editable=False)
     price = models.PositiveIntegerField()
     def __str__(self):
         return f"{self.app_id}| {self.uuid.name} | {self.service} |day: {self.day} | time: {self.time}| {self.price}"
