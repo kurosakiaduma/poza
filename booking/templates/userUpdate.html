@@ -7,58 +7,37 @@
 
 
 {% if user.is_authenticated %}
-<!--if 24hrs before nobat-->
-{% if delta24 == True %}
-<h1 class="text-center  mt-3">Edit Appointment</h1>
+<h1 class="text-center fPersian mt-3">Online Booking</h1>
+<h2 class="text-center fPersian mt-3">Please note that you can edit your appointment only to dates are available</h2>
 
-<div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
-    <form method="post" action="{% url 'userUpdate' appointment.app_id %}" class="me-2 ms-2" required>
+
+
+<div class="shadow p-4 mb-5 bg-body bg-body rounded text-black text-center m-5">
+    <form method="post" action="{% url 'userUpdate' app_id%}" class="me-2 ms-2" id="userUpdate" required>
         {% csrf_token %}
-
-        <!--input service-->
-        <div>
-            <h3 class="">Select Service:</h3>
-            <select class="form-select fs-3" name="service">
-                <option value="Doctor care">Doctor care</option>
-                <option value="Nursing care">Nursing care</option>
-                <option value="Medical social services">Medical social services</option>
-                <option value="Homemaker or basic assistance care">Homemaker or basic assistance care</option>
+        <!--input date, day and time-->
+        <div class="mt-3">
+            <h3 class="">Select Day:</h3>
+            <select class="form-select fs-3 text-center" name="date_day_time" id="date_day_time">
+                {% for validWorkday in validWorkdays %}
+                <option value="{{validWorkday}}">{{validWorkday}}</option>
+                {% endfor %}
             </select>
         </div>
-            <!--input day-->
-            <div class="mt-3">
-                <h3 class="">Select Day:</h3>
-                <select class="form-select fs-3" name="day">
-                    {% for validateWeekday in validWorkdays %}
-                    <option value="{{validateWeekday}}">{{validateWeekday}}</option>
-                    {% endfor %}
-                </select>
-            </div>
 
-            <br/>
-            <button type="submit" class="btn btn-primary text-white">Continue</button>
-        </div>
+        <button type="submit" class="btn btn-primary text-white mt-3 fPersian">Submit</button>
+
     </form>
 </div>
-<!--else if its 24hrs before editing-->
-{% else %}
-
-<div class="shadow p-4 mb-5 bg-body bg-body rounded text-black m-5 text-center fPersian">
-    <h1 class="text-danger">Appointments can only be edited if there aren't due in the next 24 hours!</h1>
-    <a href="{% url 'userPanel' %}" class="btn btn-primary mt-5">Return To User Panel</a>
-</div>
-
-{% endif %}
-
 
 {% else %}
 
-<div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
-    <h1 class="p-2  me-3">You Are Not Signed in!</h1>
-    <a href="{% url 'login' %}" class="btn btn-primary shadow text-center">Sign in</a>
+<div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5">
+    <h1 class="p-2  me-3">First Sign in!</h1>
+    <a href="{% url 'login' %}" class="btn btn-primary text-white">Sign in</a>
 </div>
 
 {% endif %}
-
-
+{% block scripts %}
+{% endblock scripts %}
 {% endblock %}

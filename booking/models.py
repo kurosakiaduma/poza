@@ -146,7 +146,7 @@ class Doctor(Persona):
         return self.email
 
     def get_absolute_url(self):
-        return reverse('doctor-detail', kwargs={'pk': self.uuid})
+        return reverse('doctor-detail', kwargs={'uuid': self.uuid})
 
 
 class Appointment(models.Model):

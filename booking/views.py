@@ -116,7 +116,19 @@ def assign_doctor(appears, doctors):
         except IndexError:
             pass
     return assigned_doctor    
-            
+
+def pricing(service):
+    price = 0
+    #Handle pricing on a seperate thread
+    if service in ["Nephrology", "Physician /Internal Medicine", "Ear, Nose and Throat (ENT)","Dermatology", "Adult Neurology", "General Surgery", "Paediatrics and Child Health", "Pain Management", "Gynaecology / Laparoscopic / Obsterics", "Ophthalmology", "Radiology"]:
+        price = 2500
+    elif service in ["Adult Cardiology", "Interventional Cardiology"]:
+        price = 3500
+    elif service in ["Anaesthesia"]:
+        price = 10000
+    elif service == "Anaesthesia and Critical Care Medicine":
+        price = 20000
+    return price
 
 
 def booking(request):
@@ -185,18 +197,9 @@ def bookingSubmit(request):
     service = request.session.get('service')
     validWorkdays = request.session.get('validWorkdays')
     assigned_doctor = ""
-    
-    #Handle pricing on a seperate thread
-    if service in ["Nephrology", "Physician /Internal Medicine", "Ear, Nose and Throat (ENT)","Dermatology", "Adult Neurology", "General Surgery", "Paediatrics and Child Health", "Pain Management", "Gynaecology / Laparoscopic / Obsterics", "Ophthalmology", "Radiology"]:
-        request.session['price'] = 2500
-    elif service in ["Adult Cardiology", "Interventional Cardiology"]:
-        request.session['price'] = 3500
-    elif service in ["Anaesthesia"]:
-        request.session['price'] = 10000
-    elif service == "Anaesthesia and Critical Care Medicine":
-        request.session['price'] = 20000
-    
-    price = request.session.get('price')
+        
+    price = pricing(service)
+    request.session['price'] = price
     print(f"{request.session['price']}")
     
     
@@ -289,20 +292,27 @@ def userPanel(request):
     })
 
 def userUpdate(request, app_id):
-    sesh = request.POST
-    print(f"SESH: {sesh}")            
-            
+    user = request.user
+    
     appointment = Appointment.objects.get(app_id__exact=app_id)
+    
+    print(f"SESH: {appointment}")    
+    
     userdatepicked = appointment.day
     service = appointment.service
-    times = {}
-    app_id = appointment.app_id
+    times = service_times(service)
+    
     #Copy  booking:
     today = datetime.today()
-    minDate = today.strftime('%Y-%m-%d')
-
-    #24h if statement in template:
+    
+    #24h check if it is possible to edit the appointment
     delta24 = (userdatepicked).strftime('%Y-%m-%d') >= (today + timedelta(days=1)).strftime('%Y-%m-%d')
+    if delta24:
+        pass
+    else:
+        messages.warning(request, "You cannot edit an appointment that is due in 24 hours.")
+        return redirect("userPanel")
+    
     #Calling 'validWeekday' Function to Loop days you want in the next 21 days:
     weekdays = validWeekday(22)
 
@@ -313,86 +323,55 @@ def userUpdate(request, app_id):
     request.session['service'] = service
     request.session['times'] = times
     request.session['validWorkdays'] = validWorkdays
-    
+        
     print(f"{service}...{validWorkdays}...{app_id}")
     
 
     if request.method == 'POST':
-        service = request.POST.get('service')
-        day = request.POST.get('day')
+        #Filter to retrieve only available times from each date before displaying them to the user
+        appointments = Appointment.objects.filter(service=service)
         
-        #Store day and service in django session:
-        request.session['day'] = day
-        request.session['service'] = service
-        request.session['app_id'] = app_id
-
-        print(f"{app_id}")
+        #Retrieve Doctor names from the filtered Doctor objects
+        doctors= []
+        service_doctors = Doctor.objects.filter(role=service).values_list("name") 
+        appears = appointments.values_list('assigned_doctor').annotate(frequency = Count('assigned_doctor'))
         
-        return redirect('userUpdateSubmit', app_id=app_id)
+        for doctor in service_doctors:
+            doctors.append(doctor[0])
 
+        print(f"THE APPOINTMENT FORMAT {appointments}, \nTHE DOCTORS ARE:{doctors}")
+    
+        appears = dict(appears)
+        
+        assigned_doctor = assign_doctor(appears=appears, doctors=doctors)
 
+        print(f"{appears} {doctors}\nASSIGNED DOCTOR-> {assigned_doctor}")
+                
+        date_day_time = request.POST.get('date_day_time')
+        date = date_day_time.split()[0]
+        time = " ".join(s for s in date_day_time.split()[2:])
+        
+        if Appointment.objects.filter(service=service, day=date, time=time).count() < 1:
+            Appointment.objects.filter(app_id=app_id).update(
+                app_id=app_id,
+                uuid = user, 
+                service = service,
+                day = date,
+                time = time,
+                assigned_doctor = assigned_doctor,    
+                ) 
+            messages.success(request, "Appointment Edited!")
+            return redirect('index')
+        else:
+                messages.success(request, "The Selected Time Has Been Reserved Before!")
+    
     return render(request, 'userUpdate.html', {
             'weekdays':weekdays,
             'validWorkdays':validWorkdays,
             'delta24': delta24,
             'app_id': app_id,
         })
-
-def userUpdateSubmit(request, app_id):
-    user = request.user
-    times = [
-        "3 PM", "3:30 PM", "4 PM", "4:30 PM", "5 PM", "5:30 PM", "6 PM", "6:30 PM", "7 PM", "7:30 PM"
-    ]
-    today = datetime.now()
-    minDate = today.strftime('%Y-%m-%d')
-    deltatime = today + timedelta(days=21)
-    strdeltatime = deltatime.strftime('%Y-%m-%d')
-    maxDate = strdeltatime
-
-    day = request.session.get('day')
-    service = request.session.get('service')
     
-    #Only show the time of the day that has not been selected before and the time he is editing:
-    hour = checkEditTime(times, day, id)
-    appointment = Appointment.objects.get(pk=id)
-    userSelectedTime = appointment.time
-    if request.method == 'POST':
-        time = request.POST.get("time")
-        date = dayToWeekday(day)
-
-        if service != None:
-            if day <= maxDate and day >= minDate:
-                if date == 'Monday' or date == 'Saturday' or date == 'Wednesday':
-                    if Appointment.objects.filter(day=day).count() < 11:
-                        if Appointment.objects.filter(day=day, time=time).count() < 1 or userSelectedTime == time:
-                            AppointmentForm = Appointment.objects.filter(pk=id).update(
-                                user = user,
-                                doctor_name = [],
-                                service = service,
-                                day = day,
-                                time = time,
-                                
-                            ) 
-                            messages.success(request, "Appointment Edited!")
-                            return redirect('index')
-                        else:
-                            messages.success(request, "The Selected Time Has Been Reserved Before!")
-                    else:
-                        messages.success(request, "The Selected Day Is Full!")
-                else:
-                    messages.success(request, "The Selected Date Is Incorrect")
-            else:
-                    messages.success(request, "The Selected Date Isn't In The Correct Time Period!")
-        else:
-            messages.success(request, "Please Select A Service!")
-        return redirect('userPanel')
-
-
-    return render(request, 'userUpdateSubmit.html', {
-        'times':hour,
-        'id': id,
-    })
-
 def staffPanel(request):
     user = request.user
     
