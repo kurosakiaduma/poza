@@ -10,23 +10,14 @@
 <h1 class="text-center fPersian mt-3">Online Booking</h1>
 
 <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black text-center m-5">
-    <form method="post" action="{% url 'bookingSubmit' %}" class="me-2 ms-2" required>
+    <form method="post" action="{% url 'bookingSubmit' %}" class="me-2 ms-2" id="bookSubmit" required>
         {% csrf_token %}
-        <!--input day-->
+        <!--input date, day and time-->
         <div class="mt-3">
             <h3 class="">Select Day:</h3>
-            <select class="form-select fs-3" name="day">
+            <select class="form-select fs-3 text-center" name="date_day_time" id="date_day_time">
                 {% for validWorkday in validWorkdays %}
                 <option value="{{validWorkday}}">{{validWorkday}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <!--input time-->
-        <h3 class="text-center fPersian mt-4">Time:</h3>
-        <div>
-            <select class="form-select fs-3 text-center" name="time">
-                {% for time in times %}
-                <option value="{{time}}">{{time}}</option>
                 {% endfor %}
             </select>
         </div>
@@ -44,5 +35,6 @@
 </div>
 
 {% endif %}
-
+{% block scripts %}
+{% endblock scripts %}
 {% endblock %}

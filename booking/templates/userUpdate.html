@@ -12,7 +12,7 @@
 <h1 class="text-center  mt-3">Edit Appointment</h1>
 
 <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
-    <form method="post" action="{% url 'userUpdate' id %}" class="me-2 ms-2" required>
+    <form method="post" action="{% url 'userUpdate' appointment.app_id %}" class="me-2 ms-2" required>
         {% csrf_token %}
 
         <!--input service-->
@@ -44,7 +44,7 @@
 {% else %}
 
 <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black m-5 text-center fPersian">
-    <h1 class="text-danger">Editing Appointments Its Only Available 24hrs Before Appointment!</h1>
+    <h1 class="text-danger">Appointments can only be edited if there aren't due in the next 24 hours!</h1>
     <a href="{% url 'userPanel' %}" class="btn btn-primary mt-5">Return To User Panel</a>
 </div>
 
@@ -55,7 +55,7 @@
 
 <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
     <h1 class="p-2  me-3">You Are Not Signed in!</h1>
-    <a href="{% url 'register' %}" class="btn btn-primary shadow text-center">Sign in</a>
+    <a href="{% url 'login' %}" class="btn btn-primary shadow text-center">Sign in</a>
 </div>
 
 {% endif %}

@@ -1,6 +1,9 @@
 <title>User Panel</title>
 {% extends 'layout.html' %}
 {% load static %}
+<head>
+    <link rel="text/stylesheet" href="./css/userPanel.css" >
+</head>>
 {% block body %}
 
 
@@ -10,14 +13,23 @@
 <h1 class=" ms-5 mt-5 ">User Panel</h1>
 
 <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
-    <h2 class="">User Info:</h2>
+    {% if user.account_type == "DOCTOR" %}
+    <h2 class="text-center">Dr. {{ first_name }} {{ last_name }}  <img src="http://127.0.0.1:8887/uploads/{{image}}" alt="Profile Image", height="100", width="100"></h2>
+    {% elif user.account_type == "ADMIN" %}
+    <h2 class="">Admin Info:</h2>
+    {% else %}
+    <h2 class="">Patient Info:</h2>
+    {% endif %}
     <ul class="list-group fs-4 mt-3">
+            {% if user.account_type != "DOCTOR" %}
             <li class="list-group mt-2">First Name: {{ first_name }}</li>
             <li class="list-group mt-2">Last Name: {{ last_name }}</li>
+            {% elif user.account_type == "DOCTOR" %}
+            <li class="list-group mt-2">Speciality: {{ role }}</li>
+            {% endif %}
             <li class="list-group mt-2">Gender: {{ user.gender}}</li>
     </ul>
 </div>
-
 <!--Appointment Loop-->
 {% if appointments.count > 0 %}
 <div class="mt-5 ">
@@ -25,11 +37,13 @@
     <div class="shadow p-4 mb-3 bg-body bg-body rounded text-black  m-5">
         {% for appointment in appointments %}
         <div class="list-group fs-4 border p-3 mb-3">
+            <p class="list-group mt-2">Appointment Reference Number: {{ appointment.app_id }}</p>
             <p class="list-group mt-2">Day: {{ appointment.day }}</p>
             <p class="list-group mt-2">Time: {{ appointment.time }}</p>
             <p class="list-group mt-2">Service: {{ appointment.service }}</p>
+            <p class="list-group mt-2">Price: {{ appointment.price }}</p>
             <div class="mt-3 mb-2">
-                <a class="btn btn-primary rounded-3 p-2" href="{% url 'userUpdate' appointment.id %}">Edit Appointment</a>
+                <a class="btn btn-primary rounded-3 p-2" href="{% url 'userUpdate' appointment.app_id %}">Edit Appointment</a>
             </div>
         </div>
         {% endfor %}

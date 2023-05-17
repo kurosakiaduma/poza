@@ -8,7 +8,7 @@ from django.urls import reverse
 from random import randint
 import PIL.Image, imageio, uuid
 
-class PatientManager(BaseUserManager):
+class PersonaManager(BaseUserManager):
     """ Manager for all user profiles """
     use_in_migrations = True
      
@@ -27,9 +27,24 @@ class PatientManager(BaseUserManager):
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         
+        print(f"{self.extra_fields}")
+        if hasattr(extra_fields, 'role'):
+            user = self.create_doctor(email=email, password=password, **extra_fields)
+            return user
+        
         user = self._create_user(email=email, password=password, **extra_fields)
         return user
-
+    
+    def create_doctor(self, email, password, is_superuser, birth_date, phone_no, is_staff, **extra_fields):
+        """ Create a new doctor profile """
+        if not email:
+            raise ValueError('User must have an email address')
+        
+        email = self.normalize_email(email)
+        user = self.model(email=email, password=password, is_superuser=is_superuser, birth_date=birth_date, phone_no=phone_no, is_staff=is_staff, account_type = ACCOUNT_CHOICES[1], **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+    
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
@@ -46,21 +61,21 @@ class PatientManager(BaseUserManager):
 User-input choices for the Booking-Appointment logic
 '''
 SERVICE_CHOICES = (
-    ("1", "Adult Cardiology"),
-    ("2", "Adult Neurology"),
-    ("3", "Anaesthesia"),
-    ("4", "Anaesthesia and Critical Care Medicine"),
-    ("5", "Dermatology"),
-    ("6", "Ear, Nose and Throat (ENT)"),
-    ("7", "General Surgery"),
-    ("8", "Gynaecology / Laparoscopic / Obsterics"),
-    ("9", "Interventional Cardiology"),
-    ("10", "Nephrology"),
-    ("11", "Ophthalmologist"),
-    ("12", "Paediatrics and Child Health"),
-    ("13", "Pain Management"),
-    ("14", "Physician /Internal Medicine"),
-    ("15", "Radiology"),
+    ("Adult Cardiology", "Adult Cardiology"),
+    ("Adult Neurology", "Adult Neurology"),
+    ("Anaesthesia", "Anaesthesia"),
+    ("Anaesthesia and Critical Care Medicine", "Anaesthesia and Critical Care Medicine"),
+    ("Dermatology", "Dermatology"),
+    ("Ear, Nose and Throat (ENT)", "Ear, Nose and Throat (ENT)"),
+    ("General Surgery", "General Surgery"),
+    ("Gynaecology / Laparoscopic / Obsterics", "Gynaecology / Laparoscopic / Obsterics"),
+    ("Interventional Cardiology", "Interventional Cardiology"),
+    ("Nephrology", "Nephrology"),
+    ("Ophthalmology", "Ophthalmology"),
+    ("Paediatrics and Child Health", "Paediatrics and Child Health"),
+    ("Pain Management", "Pain Management"),
+    ("Physician /Internal Medicine", "Physician /Internal Medicine"),
+    ("Radiology", "Radiology"),
     )
 TIME_CHOICES = (
     ("8 AM", "8 AM"),
@@ -115,7 +130,7 @@ class Persona(AbstractUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     last_update = models.DateTimeField(_('last updated'), auto_now=True)
 
-    objects = PatientManager()
+    objects = PersonaManager()
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['password']
@@ -125,9 +140,8 @@ class Persona(AbstractUser, PermissionsMixin):
 
 
 class Doctor(Persona):
-    account_type = ACCOUNT_CHOICES[1]
     role = models.CharField(max_length=50, choices=SERVICE_CHOICES, null=False)
-    image = models.ImageField(upload_to='uploads/%Y/%m/%d/', blank=True, null=True)
+    image = models.ImageField(upload_to='profiles', verbose_name='Images')
     def __str__(self):
         return self.email
 
@@ -144,4 +158,4 @@ class Appointment(models.Model):
     time_ordered = models.DateTimeField(default=datetime.now, blank=True)
     price = models.PositiveIntegerField()
     def __str__(self):
-        return f"{self.user.name} | day: {self.day} | time: {self.time}"
+        return f"{self.app_id}| {self.uuid.name} | {self.service} |day: {self.day} | time: {self.time}| {self.price}"
