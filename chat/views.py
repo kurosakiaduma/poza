@@ -3,15 +3,31 @@ from django.shortcuts import render
 from .models import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from booking.models import Appointment
 
 import openai
 
 
 def chat(request):
+    access(request=request)
     chats = Chat.objects.all()
     return render(request, 'chat.html', {
         'chats': chats,
     })
+    
+    
+    
+    
+def access(request):
+    from datetime import datetime, timedelta
+    user = request.user
+    minDate = datetime.today()
+    maxDate = datetime.today() + timedelta(days=1)
+    
+    appointments = Appointment.objects.filter(day__range=[minDate, maxDate]).values_list('uuid_id')
+    print(appointments, user.uuid)
+
+
 
 @csrf_exempt
 def Ajax(request):
@@ -25,7 +41,7 @@ def Ajax(request):
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": '''You are MediBot, a chatbot curated to only provide factual responses related to medical topics or \
-                questions and I'll do my best to provide you with accurate information. For every response, end with a note that the patient \
+                questions and you'lldo your best to provide users with accurate and factual information. For every response, end with a note that the patient \
                     must always show up for any scheduled appointments to receive quality care at the hands of qualified physicians.'''},
             {"role": "user", "content": f"{text}"}
         ],
