@@ -96,19 +96,22 @@ def assign_doctor(appears, doctors):
         and randomly select the the index value of the remaining values in the doctors list 
     """
     for i, j in appears.items():
+        if len(list(appears.keys())) == 1:
+            doctors.remove(i)
+            break
         if j != min(appears.values()):
             try:
                 doctors.remove(i)
             except ValueError:
                 pass
-        
-            
+               
     if len(doctors) == 1:
         assigned_doctor = doctors[0]
     else:
         try:
             from random import randint
-            idx = randint(0, (len(doctors)-1))            
+            idx = randint(0, (len(doctors)-1))  
+            print(f"THIS IS THE IDX ==>{idx}")          
             assigned_doctor = doctors[idx]
         except IndexError:
             pass
@@ -121,7 +124,6 @@ def booking(request):
     """Function that applies the necessar business logic required in booking only available time slots within a 21-day period"""
     #Calling 'getServices' function to retrieve a list of all the available services
     services = getServices()
-    assigned_doctor = ""
     times = {}
 
     if request.method == 'POST':
@@ -146,21 +148,6 @@ def booking(request):
         #Filter to retrieve only available times from each date before displaying them to the user
         appointments = Appointment.objects.filter(service=service)
         
-        #Retrieve Doctor names from the filtered Doctor objects
-        doctors= []
-        service_doctors = Doctor.objects.filter(role=service).values_list("name") 
-        appears = appointments.values_list('assigned_doctor').annotate(frequency = Count('assigned_doctor'))
-        
-        for doctor in service_doctors:
-            doctors.append(doctor[0])
-
-        appears = dict(appears)
-        
-        assigned_doctor = assign_doctor(appears=appears, doctors=doctors)
-        
-        print(f"{appears} {doctors}\nASSIGNED DOCTOR-> {assigned_doctor}")
-        
-        
         for item in appointments:
             print(item.service, item.assigned_doctor, item.day)
     
@@ -172,12 +159,8 @@ def booking(request):
                     validWorkdays.remove(appointment_date+' '+appointment_day+' '+item.time)
                     pass
                 
-        
-        print(f"THE APPOINTMENT FORMAT {appointments}, \nTHE DOCTORS ARE:{doctors}")
-    
         #Store day, service and times data in django session:
         request.session['service'] = service
-        request.session['assigned_doctor'] = assigned_doctor
         request.session['times'] = times
         request.session['validWorkdays'] = validWorkdays
         
@@ -201,7 +184,7 @@ def bookingSubmit(request):
     #Get stored data from django session:
     service = request.session.get('service')
     validWorkdays = request.session.get('validWorkdays')
-    assigned_doctor = request.session.get('assigned_doctor')
+    assigned_doctor = ""
     
     #Handle pricing on a seperate thread
     if service in ["Nephrology", "Physician /Internal Medicine", "Ear, Nose and Throat (ENT)","Dermatology", "Adult Neurology", "General Surgery", "Paediatrics and Child Health", "Pain Management", "Gynaecology / Laparoscopic / Obsterics", "Ophthalmology", "Radiology"]:
@@ -218,6 +201,26 @@ def bookingSubmit(request):
     
     
     if request.method == 'POST':
+        #Filter to retrieve only available times from each date before displaying them to the user
+        appointments = Appointment.objects.filter(service=service)
+        
+        #Retrieve Doctor names from the filtered Doctor objects
+        doctors= []
+        service_doctors = Doctor.objects.filter(role=service).values_list("name") 
+        appears = appointments.values_list('assigned_doctor').annotate(frequency = Count('assigned_doctor'))
+        
+        for doctor in service_doctors:
+            doctors.append(doctor[0])
+
+        print(f"THE APPOINTMENT FORMAT {appointments}, \nTHE DOCTORS ARE:{doctors}")
+    
+        appears = dict(appears)
+        
+        assigned_doctor = assign_doctor(appears=appears, doctors=doctors)
+
+        print(f"{appears} {doctors}\nASSIGNED DOCTOR-> {assigned_doctor}")
+        
+        
         date_day_time = request.POST.get('date_day_time')
         date = date_day_time.split()[0]
         day = date_day_time.split()[1]
