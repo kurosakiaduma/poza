@@ -38,9 +38,11 @@
         {% for appointment in appointments %}
         <div class="list-group fs-4 border p-3 mb-3">
             <p class="list-group mt-2">Appointment Reference Number: {{ appointment.app_id }}</p>
+            <hr>
             <p class="list-group mt-2">Day: {{ appointment.day }}</p>
             <p class="list-group mt-2">Time: {{ appointment.time }}</p>
             <p class="list-group mt-2">Service: {{ appointment.service }}</p>
+            <p class="list-group mt-2">Doctor: {{ appointment.assigned_doctor }}</p>
             <p class="list-group mt-2">Price: {{ appointment.price }}</p>
             <div class="mt-3 mb-2">
                 <a class="btn btn-primary rounded-3 p-2" href="{% url 'userUpdate' appointment.app_id %}">Edit Appointment {{ appointment.app_id }}</a>

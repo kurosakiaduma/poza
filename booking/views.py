@@ -126,7 +126,6 @@ def assign_doctor(appears, doctors):
     """
     for i, j in appears.items():
         if len(list(appears.keys())) == 1:
-            doctors.remove(i)
             break
         if j != min(appears.values()):
             try:
@@ -401,15 +400,19 @@ def userUpdate(request, app_id):
             'app_id': app_id,
         })
     
-def staffPanel(request):
+def staffPanel(request, foo=None):
     user = request.user
-    
     today = datetime.today()
-    minDate = today.strftime('%Y-%m-%d')
-    deltatime = today + timedelta(days=21)
-    strdeltatime = deltatime.strftime('%Y-%m-%d')
-    maxDate = strdeltatime
-    
+
+    if foo == "upcoming":
+        minDate = today.strftime('%Y-%m-%d')
+        maxDate = (today + timedelta(days=21)).strftime('%Y-%m-%d')
+   
+    else:
+        minDate = (today - timedelta(days=30)).strftime('%Y-%m-%d')
+        maxDate = (today - timedelta(days=1)).strftime('%Y-%m-%d')
+        
+        
     #Only show the Appointments 21 days from today
     items = Appointment.objects.filter(day__range=[minDate, maxDate]).order_by('day', 'time')
 

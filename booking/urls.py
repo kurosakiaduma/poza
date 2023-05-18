@@ -10,5 +10,6 @@ urlpatterns = [
     path('uploads',views.userPanel, name='userPanel'),
     path('user-panel', views.userPanel, name='userPanel'),
     path('user-update/<int:app_id>', views.userUpdate, name='userUpdate'),
-    path('staff-panel', views.staffPanel, name='staffPanel'),
+    path('staff-panel/<slug:foo>', views.staffPanel, name='staffPanel'),
+    path('staff-panel/', views.staffPanel, name='staffPanel'),
 ]+  static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
