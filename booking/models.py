@@ -158,5 +158,7 @@ class Appointment(models.Model):
     time_ordered = models.DateTimeField(default=datetime.now, blank=True)
     assigned_doctor = models.CharField(max_length=30, editable=False)
     price = models.PositiveIntegerField()
+    note = models.TextField(default="")
+    completed = models.BooleanField(default=False)
     def __str__(self):
-        return f"{self.app_id}| {self.uuid.name} | {self.service} |day: {self.day} | time: {self.time}| {self.price}"
+        return f"{self.app_id}| {self.uuid.name} | {self.service} |day: {self.day} | time: {self.time}| {self.price} | {self.note}"

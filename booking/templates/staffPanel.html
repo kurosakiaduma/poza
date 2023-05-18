@@ -36,6 +36,7 @@
               <th class="text-center" scope="col">Service</th>
               <th class="text-center" scope="col">Patient</th>
               <th class="text-center" scope="col">Time</th>
+              <th class="text-center" scope="col">Doctor's Remark</th>
             </tr>
           </thead>
           <tbody id="myTable">
@@ -46,6 +47,38 @@
               <td class="text-center">{{item.service}}</td>
               <td class="text-center">{{item.uuid.name}}</td>
               <td class="text-center">{{item.time}}</td>
+              <td class="text-center">
+                <form action='{% url "staffPanel" app_id=item.app_id%}', method="post">
+                  <div class="row">
+                    {% if not item.completed %}
+                    <div class="col">
+                      <textarea type="text" name="note" id="note" style="height:100px; border-color:green", placeholder="Enter any comments, notes or remarks for the patient here..."></textarea>
+                    </div>
+                    {% else %}
+                    <div class="col">
+                      <textarea readonly="True" type="text" name="note" id="note" style="height: 100px; border-color:red;", placeholder="Enter any comments, notes or remarks for the patient here..."></textarea>
+                    </div>
+                      {% endif %}
+                    <div class="col">
+                      {%if not item.completed %}
+                      <button type="submit" class="btn btn-success  text-light" id="complete" style="margin-top: 30;">Check Completed</button>
+                      {% else %}
+                      <button type="submit" class="btn btn-success  text-light" id="incomplete">Check Undone</button>
+                      {% endif %}
+                    </div>
+                  </div>
+                </form>
+              </td>
+
+
+
+             
+
+
+
+
+
+
             </tr>
               {% endfor %}
           </tbody>

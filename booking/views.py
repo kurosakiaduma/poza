@@ -5,6 +5,10 @@ from .models import *
 from django.contrib import messages
 from django.conf import settings
 from django.conf.urls.static import static
+from django.forms import *
+from .forms import *
+
+
 
 def getServices():
     services=[]
@@ -304,7 +308,12 @@ def userPanel(request):
         role = Doctor.objects.get(persona_ptr_id=uuid).get_role_display()
         image = Doctor.objects.get(persona_ptr_id=uuid).image
         print(f"{image}")
-    appointments = Appointment.objects.filter(uuid=uuid).order_by('app_id','day', 'time')
+    
+    today = datetime.today()    
+    minDate = today.strftime('%Y-%m-%d')
+    maxDate = (today + timedelta(days=21)).strftime('%Y-%m-%d')
+
+    appointments = Appointment.objects.filter(uuid=uuid, day__range=[minDate, maxDate]).order_by('app_id','day', 'time')
     
     """Debug line"""
     print(f"{appointments} {name}")
@@ -389,7 +398,7 @@ def userUpdate(request, app_id):
                 assigned_doctor = assigned_doctor,    
                 ) 
             messages.success(request, "Appointment Edited!")
-            return redirect('index')
+            return redirect('userPanel')
         else:
                 messages.success(request, "The Selected Time Has Been Reserved Before!")
     
@@ -399,8 +408,9 @@ def userUpdate(request, app_id):
             'delta24': delta24,
             'app_id': app_id,
         })
-    
-def staffPanel(request, foo=None):
+
+
+def staffPanel(request, foo=None, app_id=None):
     user = request.user
     today = datetime.today()
 
@@ -415,9 +425,21 @@ def staffPanel(request, foo=None):
         
     #Only show the Appointments 21 days from today
     items = Appointment.objects.filter(day__range=[minDate, maxDate]).order_by('day', 'time')
-
+    form = CompletedForm(initial={'completed': i.completed for i in items})
+    print(form)
+    
+    if request.method == "POST":
+        #Filter to retrieve only available times from each date before displaying them to the user
+        app_id = ""
+        Appointment.objects.filter(app_id=app_id).update(
+            app_id=app_id,
+            note = note,    
+                ) 
+        
+        
     return render(request, 'staffPanel.html', {
         'items':items,
         "user": user,
-        "name": user.name
-    })
+        "name": user.name,
+        "form":form
+    })     
