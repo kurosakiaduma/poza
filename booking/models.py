@@ -115,7 +115,7 @@ def at_least_age_18(value):
         )
 
 class Persona(AbstractUser, PermissionsMixin):
-    uuid = models.UUIDField(primary_key=True, auto_created=True, default=uuid.uuid4())
+    uuid = models.UUIDField(primary_key=True, auto_created=True, default=uuid.uuid4)
     username = None
     name = models.CharField(max_length=50, null=False)
     email = models.EmailField(max_length=255, unique=True, validators=[EmailValidator(message="Please enter a valid email address in the format"), RegexValidator(regex='^name@name.name', inverse_match=True, message="Please provide a valid email address.")])

@@ -4,10 +4,39 @@ from datetime import datetime, timedelta
 from .models import *
 from django.contrib import messages
 from django.conf import settings
-from django.views import View
-from django.http import HttpResponse, JsonResponse
 from django.conf.urls.static import static
+
+def getServices():
+    services=[]
+    for service in SERVICE_CHOICES:
+        services.append(service[1])
+    return services
+
+def dayToWeekday(x):
+    y = datetime.strptime(x, "%Y-%m-%d").strftime('%A')
+    return y
+
+def validWeekday(days):
+    #Loop days you want in the next 21 days:
+    today = datetime.now()
+    weekdays = []
+    for i in range (0, days):
+        x = today + timedelta(days=i)
+        y = x.strftime('%A')
+        if y not in ['Friday', 'Sunday']:
+            weekdays.append(x.strftime('%Y-%m-%d'))
+    return weekdays
     
+def isWeekdayValid(x, service, times):
+    validWorkdays = []
+    for j in x:
+        if datetime.strptime(j, '%Y-%m-%d').strftime('%A') in times.keys():
+            if Appointment.objects.filter(day=j, service=service ).count() < len(times[datetime.strptime(j, '%Y-%m-%d').strftime('%A')]):
+                for i in times[datetime.strptime(j, '%Y-%m-%d').strftime('%A')]:
+                    if Appointment.objects.filter(day=j, service=service, time=i).count() < 1:
+                        validWorkdays.append(f'{j} {datetime.strptime(j, "%Y-%m-%d").strftime("%A")} {i}')
+    return validWorkdays
+
 def service_times(service):
     # Handling timing logic for each service
     if service == "Nephrology":
@@ -389,43 +418,3 @@ def staffPanel(request):
         "user": user,
         "name": user.name
     })
-def getServices():
-    services=[]
-    for service in SERVICE_CHOICES:
-        services.append(service[1])
-    return services
-
-def dayToWeekday(x):
-    y = datetime.strptime(x, "%Y-%m-%d").strftime('%A')
-    return y
-
-def validWeekday(days):
-    #Loop days you want in the next 21 days:
-    today = datetime.now()
-    weekdays = []
-    for i in range (0, days):
-        x = today + timedelta(days=i)
-        y = x.strftime('%A')
-        if y not in ['Friday', 'Sunday']:
-            weekdays.append(x.strftime('%Y-%m-%d'))
-    return weekdays
-    
-def isWeekdayValid(x, service, times):
-    validWorkdays = []
-    for j in x:
-        if datetime.strptime(j, '%Y-%m-%d').strftime('%A') in times.keys():
-            if Appointment.objects.filter(day=j, service=service ).count() < len(times[datetime.strptime(j, '%Y-%m-%d').strftime('%A')]):
-                for i in times[datetime.strptime(j, '%Y-%m-%d').strftime('%A')]:
-                    if Appointment.objects.filter(day=j, service=service, time=i).count() < 1:
-                        validWorkdays.append(f'{j} {datetime.strptime(j, "%Y-%m-%d").strftime("%A")} {i}')
-    return validWorkdays
-
-def checkEditTime(times, day, id):
-    #Only show the time of the day that has not been selected before:
-    x = []
-    appointment = Appointment.objects.get(app_id=id)
-    time = appointment.time
-    for k in times:
-        if Appointment.objects.filter(day=day, time=k).count() < 1 or time == k:
-            x.append(k)
-    return x
