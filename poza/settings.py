@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
-import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -37,9 +36,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_extensions",
     "booking" ,#Booking
     "chat", #MediBot microservice
     "members", #Registration service
+    'ajax_select',  #Caching service
 ]
 
 MIDDLEWARE = [
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'booking.middlewares.AjaxMiddleware', 
 ]
 
 ROOT_URLCONF = "poza.urls"
@@ -67,6 +69,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.media",
             ],
         },
     },
@@ -85,6 +88,12 @@ DATABASES = {
     }
 }
 
+#Enable graphing of models 
+GRAPH_MODELS = {
+  'all_applications': True,
+  'group_models': True,
+    'app_labels': ["booking", "chat", "members"],
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -116,23 +125,32 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Configured media path
+MEDIA_ROOT = BASE_DIR / 'uploads'
+MEDIA_URL = "/media/"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / 'chat/static'
 STATICFILES_DIRS=[
-    os.path.join(BASE_DIR, 'chat\static'),
+    MEDIA_ROOT
 ]
 
+
 # Authentication Backends
-#
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'members.customauthbackend.EmailAuthBackend',
 ]
 
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+#test settings for user
+USERNAME = "zaziebeets@gmail.com"
+PASSWORD = "@octo808"

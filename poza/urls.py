@@ -13,9 +13,14 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
+from django.conf.urls.static import static
 from django.urls import path, include
 from chat.views import Ajax
+from ajax_select import urls as ajax_select_urls
+
+admin.autodiscover()
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -23,9 +28,14 @@ urlpatterns = [
     path("", include("booking.urls")),
     path("members", include("django.contrib.auth.urls")),
     path("members", include("members.urls")),
-    path('ajax', Ajax, name='ajax')
+    path('ajax', Ajax, name='ajax'),
+    path(r'^ajax_select/', include(ajax_select_urls)),
 ]
 
-#Configuring admin titles
+if settings.DEBUG:
+    urlpatterns = urlpatterns + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+#Configuring links to serve static user-uploaded content
+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+#Configuring admin titles
 admin.site.site_header = "Poza Specialist Clinic Admin"
