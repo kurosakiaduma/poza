@@ -5,6 +5,8 @@ from .models import *
 from django.contrib import messages
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponseRedirect
+from urllib.parse import urlparse
 from django.forms import *
 from .forms import *
 
@@ -410,36 +412,53 @@ def userUpdate(request, app_id):
         })
 
 
-def staffPanel(request, foo=None, app_id=None):
+def staffPanel(request, **extra_fields):
     user = request.user
+    if request.method == "POST":
+        app_id =  extra_fields.get('foo', None)
+        clicked_button = request.POST.get('button_id')
+        if clicked_button == "complete":
+            #Filter to retrieve only available times from each date before displaying them to the user            
+            print(f"{extra_fields} {request.POST.get('button_id')}")
+            note = request.POST.get("note")
+            patient = Appointment.objects.get(app_id=app_id).uuid.name
+            Appointment.objects.filter(app_id=app_id).update(
+                app_id=app_id,
+                note = note,
+                completed=True
+                ) 
+            messages.success(request, f"Completed, and sent a note to {patient}")
+        elif clicked_button == "undo":
+            patient = Appointment.objects.get(app_id=app_id).uuid.name
+            Appointment.objects.filter(app_id=app_id).update(
+                app_id=app_id,
+                completed=False
+            )
+            messages.info(request, f"You have confirmed your appointment with {patient} is not complete.")
+            
+        if request.META.get('HTTP_REFERER') == 'http://127.0.0.1:8000/staff-panel/past?':  
+            return redirect("http://127.0.0.1:8000/staff-panel/past?")     
+        else:
+            return redirect("staffPanel")
+        
     today = datetime.today()
 
-    if foo == "upcoming":
-        minDate = today.strftime('%Y-%m-%d')
-        maxDate = (today + timedelta(days=21)).strftime('%Y-%m-%d')
-   
-    else:
+    foo = extra_fields.get('foo', None)
+    
+    if foo == "past":
         minDate = (today - timedelta(days=30)).strftime('%Y-%m-%d')
         maxDate = (today - timedelta(days=1)).strftime('%Y-%m-%d')
         
+    else:
+        minDate = today.strftime('%Y-%m-%d')
+        maxDate = (today + timedelta(days=21)).strftime('%Y-%m-%d')
+   
         
     #Only show the Appointments 21 days from today
     items = Appointment.objects.filter(day__range=[minDate, maxDate]).order_by('day', 'time')
-    form = CompletedForm(initial={'completed': i.completed for i in items})
-    print(form)
-    
-    if request.method == "POST":
-        #Filter to retrieve only available times from each date before displaying them to the user
-        app_id = ""
-        Appointment.objects.filter(app_id=app_id).update(
-            app_id=app_id,
-            note = note,    
-                ) 
-        
         
     return render(request, 'staffPanel.html', {
         'items':items,
         "user": user,
         "name": user.name,
-        "form":form
     })     
