@@ -134,10 +134,8 @@ MEDIA_URL = "/media/"
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / 'chat/static'
-STATICFILES_DIRS=[
-    MEDIA_ROOT,
-]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT =os.path.join(BASE_DIR, 'staticfiles')
 
 
 # Authentication Backends
