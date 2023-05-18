@@ -17,13 +17,13 @@
         {% csrf_token %}
             <div class="mb-3">
               <label for="exampleInputEmail1" class="form-label fs-2">Email address</label>
-              <input type="text" width="" class="form-control form-control-lg" name="email" aria-describedby="emailHelp" placeholder="email address...">
+              <input id="login_field" type="text" width="" class="form-control form-control-lg" name="email" aria-describedby="emailHelp" placeholder="email address...">
             </div>
             <div class="mb-3">
               <label for="exampleInputPassword1" class="form-label fs-2">Password</label>
-              <input type="password" class="form-control form-control-lg" placeholder="Password..." name="password">
+              <input id="password_field" type="password" class="form-control form-control-lg" placeholder="Password..." name="password">
             </div>
-            <button type="submit" class="btn btn-primary">Sign in</button>
+            <button id="btnSubmit" type="submit" class="btn btn-primary">Sign in</button>
             </br>
             <label class="form-label fs-3 mt-5">Don't Have An Account?</label>
             </br>
