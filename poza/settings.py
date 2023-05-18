@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,7 +25,7 @@ SECRET_KEY = "django-insecure-tb@$=(h+a6t$u)2kq86+o)c+94y!+t-5(7&s%o6*efxt0$+9@=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -135,7 +136,7 @@ MEDIA_URL = "/media/"
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / 'chat/static'
 STATICFILES_DIRS=[
-    MEDIA_ROOT
+    MEDIA_ROOT,
 ]
 
 
