@@ -32,13 +32,21 @@ def appointment_updated(sender, instance, **kwargs):
         # Send message to persona here
         # Get the notification object for this appointment
         
-        notification, created = Notification.objects.update_or_create(
+        notification, created = Notification.objects.get_or_create(
             notif_id=instance.app_id,
-            defaults={'persona_id': instance.uuid},
-            message=message,
-            updated_at=updated_at
         )
-        print(f"{notification} <=== SIGNAL HALWAY")
+        
+        print(f"{notification} {created} <=== SIGNAL HALWAY")
+        if created:
+            notification.persona_id = instance.uuid
+            notification.message = message
+            notification.updated_at = updated_at
+        else:
+            import uuid
+            notification.notif_id = uuid.uuid1
+            notification.persona_id = instance.uuid
+            notification.message = message
+            notification.updated_at = updated_at
         
         '''Catching errors in case notification is not created'''
         try:

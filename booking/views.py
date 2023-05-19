@@ -331,10 +331,13 @@ def userPanel(request):
     nairobi_tz = pytz.timezone('Africa/Nairobi')
     persona.last_logged = datetime.now(nairobi_tz)
     persona.save()
-    notifications = Notification.objects.filter(persona_id = user, updated_at__gte=request.user.last_logged)
+    notifications = Notification.objects.filter(persona_id = user, updated_at__lte=request.user.last_logged)
+    
     
     """Debug line"""
-    print(f"{notifications} UUID==> {appointments}")
+    print(f"{appointments} {notifications} {persona}")
+    
+    
     
     return render(request, 'userPanel.html', {
         'user':user,
