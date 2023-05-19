@@ -526,4 +526,24 @@ def staffPanel(request, **extra_fields):
         "name": user.name,
     })     
     
+def analytics(request):
+    # Get the user object from request
+    user = request.user
     
+    # If the user is not admin, redirect them to the home page.
+    if user.account_type != "ADMIN":
+        messages.error(request, "Invalid request!")
+        return redirect("index")
+    appointments = Appointment.objects.all().values()
+    import pandas as pd
+    import pdb; pdb.set_trace()
+    import plotly.express as px
+    
+    df = pd.DataFrame.from_records(appointments)
+    print(f"{df}\n{df.info()}\n{df.describe()}")
+    
+    return render(request, "analytics.html", {
+        "user": user,
+        "appointments":appointments,
+        "df": df,
+    })

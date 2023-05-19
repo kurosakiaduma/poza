@@ -13,4 +13,5 @@ urlpatterns = [
     path('staff-panel/<slug:foo>', views.staffPanel, name='staffPanel'),
     path('staff-panel/<slug:app_id>', views.staffPanel, name='staffPanel'),
     path('staff-panel/', views.staffPanel, name='staffPanel'),
+    path('analytics/', views.analytics, name='analytics'),
 ]+  static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

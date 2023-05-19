@@ -36,14 +36,14 @@ def appointment_updated(sender, instance, **kwargs):
             notif_id=instance.app_id,
         )
         
-        print(f"{notification} {created} <=== SIGNAL HALWAY")
-        if created:
-            notification.persona_id = instance.uuid
+        print(f"{notification} <=== SIGNAL HALWAY")
+        if notification.persona_id:
+            print("HIIIIIIIIIIIIIIIIIIIIIIIIIIII")
             notification.message = message
             notification.updated_at = updated_at
         else:
             import uuid
-            notification.notif_id = uuid.uuid1
+            notification.notif_id = uuid.uuid1()
             notification.persona_id = instance.uuid
             notification.message = message
             notification.updated_at = updated_at
