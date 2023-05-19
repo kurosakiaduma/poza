@@ -71,9 +71,23 @@
 <!--Appointment Loop-->
 {% if appointments.count > 0 %}
 <div class="mt-5 ">
-    <h1 class=" ms-5">Appointments:</h1>
-    <div class="shadow p-4 mb-3 bg-body bg-body rounded text-black  m-5">
-        {% for appointment in appointments %}
+    <div class="row text-center">
+        <h1 class="">Appointments</h1>
+        <div class="col">
+          <form action='{% url "userPanel" foo="upcoming"%}' class="form-inline" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success text-light mx-2 shadow" id="upcoming">Upcoming</button>
+          </form>
+        </div>
+        <div class="col">
+          <form action='{% url "userPanel" foo="past"%}' class="form-inline" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success text-light mx-2 shadow" id="past">Past</button>
+          </form>
+        </div>
+      </div>      
+    {% for appointment in appointments %}
+    <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
         <div class="row">
             <div class="col">
                 <div class="list-group fs-4 border p-3 mb-3">
@@ -88,13 +102,25 @@
                         <a class="btn btn-primary rounded-3 p-2" href="{% url 'userUpdate' appointment.app_id %}">Edit Appointment {{ appointment.app_id }}</a>
                     </div>    
                 </div>
-                <div class="col">
-
+            </div>    
+            <div class="col">
+                <div class="list-group fs-4 border p-3 mb-3"> 
+                    <style>
+                        #note {
+                            width: 100%;
+                            box-sizing: border-box;
+                            height: 100%;
+                            min-height: 440;
+                        }
+                    </style>
+                    <textarea class="form-control bg-dark text-light" readonly id="note">
+                        {{ appointment.note }}
+                    </textarea>
                 </div>
             </div>
         </div>
-        {% endfor %}
     </div>
+    {% endfor %}
 </div>
 {% endif %}
 

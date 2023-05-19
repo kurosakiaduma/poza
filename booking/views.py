@@ -8,6 +8,7 @@ from django.conf.urls.static import static
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.forms import *
+from django.views.decorators.csrf import csrf_exempt
 from .forms import *
 
 
@@ -292,52 +293,92 @@ def bookingSubmit(request):
     return render(request, 'bookingSubmit.html', {
         'validWorkdays': validWorkdays,
         })
-
+@csrf_exempt
 @login_required
-def userPanel(request):
+def userPanel(request, **extra_fields):
     """
-    Renders the user panel page with booked appointments details and any new notifications for the current user.
+    View function that renders the user panel page with any new notifications for the user.
 
     Args:
         request (HttpRequest): The HTTP request object.
-
+        extra_fields (dict): A dictionary containing any extra fields that were passed to the view.
     Returns:
-        HttpResponse: The HTTP response object.
+        HttpResponse: The HTTP response object containing the rendered user panel page.
     """
+    # Get the user object from the request
     user = request.user
-    print(f"{user} {bool(user.get_username())}")
+    # If the user is not logged in, redirect them to the login page
     if not user.get_username():
         return render(request, 'index.html')
     
+    # Split the user's name into first and last name
     name = user.name.split()
     first_name = name[0]
     last_name = name[-1]
+    
+    #Get the UUID of the user
     uuid = user.uuid
+    
+    # Initialize variables for role and image
     role = ""
     image = None
+    
+    # If the user is a doctor, get their role and image
     if user.account_type =="DOCTOR":
         role = Doctor.objects.get(persona_ptr_id=uuid).get_role_display()
         image = Doctor.objects.get(persona_ptr_id=uuid).image
         print(f"{image}")
     
+    # Get today's date and initialize variables for minDate and maxDate
     today = datetime.today()    
     minDate = today.strftime('%Y-%m-%d')
     maxDate = (today + timedelta(days=21)).strftime('%Y-%m-%d')
 
+    # Get all appointments for the user within the next 21 days
     appointments = Appointment.objects.filter(uuid=user, day__range=[minDate, maxDate]).order_by('app_id','day', 'time')
-    persona = Persona.objects.get(uuid=user.uuid)
     
+    # Get the persona object for the user and update their last_logged field
+    persona = Persona.objects.get(uuid=user.uuid)
     import pytz
     nairobi_tz = pytz.timezone('Africa/Nairobi')
     persona.last_logged = datetime.now(nairobi_tz)
     persona.save()
-    notifications = Notification.objects.filter(persona_id = user, updated_at__lte=request.user.last_logged)
     
+    # Get all notifications for the user that have been updated since they last logged in
+    notifications = Notification.objects.filter(persona_id = user, updated_at__gte=request.user.last_logged)
     
     """Debug line"""
     print(f"{appointments} {notifications} {persona}")
     
     
+    if request.method == "POST":    
+        today = datetime.today()
+
+        foo = extra_fields.get('foo', None)
+        
+        if foo == "past":
+            minDate = (today - timedelta(days=30)).strftime('%Y-%m-%d')
+            maxDate = (today - timedelta(days=1)).strftime('%Y-%m-%d')
+            
+        else:
+            minDate = today.strftime('%Y-%m-%d')
+            maxDate = (today + timedelta(days=21)).strftime('%Y-%m-%d')
+    
+            
+        #Only show the Appointments 21 days from today
+        appointments = Appointment.objects.filter(day__range=[minDate, maxDate]).order_by('day', 'time')
+            
+        return render(request, 'userPanel.html', {
+            "user": user,
+            "name": user.name,
+            'first_name': first_name,
+            'last_name': last_name,
+            'appointments':appointments,
+            'role': role,
+            'image': image,
+            'notifications': notifications,
+            'media_root': settings.MEDIA_ROOT
+            })     
     
     return render(request, 'userPanel.html', {
         'user':user,

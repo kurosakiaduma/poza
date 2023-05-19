@@ -65,10 +65,15 @@
                             </ul>
                         </li>
                         {% else %}
-                        <li class="nav-item me-3">
-                            <a class="nav-link active cHover" href="{% url 'register' %}">Sign in/Sign Up</a>
-                        </li>
-                        {% endif %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                              Sign in/Sign Up
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                              <li><a class="dropdown-item" href="{% url 'login' %}">Log in</a></li>
+                              <li><a class="dropdown-item" href="{% url 'register' %}">Sign up</a></li>
+                            </ul>
+                          </li>   {% endif %}
                     </ul>
                 </div>
             </div>
