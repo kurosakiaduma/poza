@@ -551,24 +551,50 @@ def analytics(request):
     # Print the dataframe with the new datetime column
     print(f"{df}\n{df.info()}")
     
-    fig = px.bar(df, x="day", y="price", color="service", template="plotly_dark", 
-                title="Prices over days", hover_data=["price"], 
-                text="price", labels={"price": "Price (KES)"}, opacity=0.8,
-                barmode="group")
+    # Group the data by day and sum the prices for each day
+    df_grouped = df.groupby('day').agg({'price': 'sum'}).reset_index()
+
+    # Create a line plot of the total price by day
+    fig = px.line(df_grouped, x='day', y='price', title='Total Revenue per Day',
+                template='plotly_dark', hover_data=['price'],
+                text='price', labels={'price': 'Price (KES)'},
+                line_shape='spline', render_mode='svg',
+                color_discrete_sequence=['#F63366'])
+
+    fig.update_traces(mode='markers+lines', marker=dict(size=8))
+
+    fig.update_layout(title_font=dict(size=24), xaxis_title_font=dict(size=18),
+                    yaxis_title_font=dict(size=18), legend=dict(font=dict(size=16)))
     plot_div = fig.to_html(full_html=False)
 
+    # Create a bar plot of appointments by service
     fig = px.bar(df, x="day", color = "service", template="plotly_dark",
                 title="Appointments by Service", labels={"day": "Day of the Week"})
     plot_script = fig.to_html(full_html=False)
 
+    
+    # Create a pie chart showing appointments by service
     fig = px.pie(df, names="service", title="Appointments by Service", template="plotly_dark",
-                color_discrete_sequence=colors)
+    color_discrete_sequence=colors, hole=0.2, hover_data=['price'],
+    labels={'service': 'Service'})
+    # Set textinfo attribute to show both label and percentage on pie chart
+    fig.update_traces(textinfo='label+percent', pull=[0, 0.1, 0], opacity=0.8)
+    # Remove legend and make pie chart a bit larger
+    fig.update_layout(showlegend=False, margin=dict(l=100, r=100))
+    # Convert figure to HTML
     plot_pie_dist = fig.to_html(full_html=False)
 
-    fig = px.scatter_3d(df, x="day", y="service", z="price", color_discrete_sequence=colors,
-                        template="plotly_dark", title="Price Distribution by Day and Service",
-                        labels={"day": "Day of the Week"})
+
+    # Create a 3D scatter plot showing price distribution by day and service
+    fig = px.scatter_3d(df, x="day", y="service", z="price",
+    template="plotly_dark", title="Price Distribution by Day and Service",
+    labels={"day": "Day of the Week"}, symbol='service')
+    # Set fixed marker size for all data points
+    fig.update_traces(marker=dict(size=5))
+    # Convert figure to HTML
     plot_box_dist = fig.to_html(full_html=False)
+
+
     
     # Group the data by day and service and calculate the average price for each group
     df_grouped = df.groupby(["day", "service"]).mean().reset_index()
