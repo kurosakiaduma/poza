@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponseRedirect
-from urllib.parse import urlparse
+from django.contrib.auth.decorators import login_required
 from django.forms import *
 from .forms import *
 
@@ -293,8 +293,17 @@ def bookingSubmit(request):
         'validWorkdays': validWorkdays,
         })
 
-
+@login_required
 def userPanel(request):
+    """
+    Renders the user panel page with booked appointments details and any new notifications for the current user.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
     user = request.user
     print(f"{user} {bool(user.get_username())}")
     if not user.get_username():
@@ -315,10 +324,17 @@ def userPanel(request):
     minDate = today.strftime('%Y-%m-%d')
     maxDate = (today + timedelta(days=21)).strftime('%Y-%m-%d')
 
-    appointments = Appointment.objects.filter(uuid=uuid, day__range=[minDate, maxDate]).order_by('app_id','day', 'time')
+    appointments = Appointment.objects.filter(uuid=user, day__range=[minDate, maxDate]).order_by('app_id','day', 'time')
+    persona = Persona.objects.get(uuid=user.uuid)
+    
+    import pytz
+    nairobi_tz = pytz.timezone('Africa/Nairobi')
+    persona.last_logged = datetime.now(nairobi_tz)
+    persona.save()
+    notifications = Notification.objects.filter(persona_id = user, updated_at__gte=request.user.last_logged)
     
     """Debug line"""
-    print(f"{appointments} {name}")
+    print(f"{notifications} UUID==> {appointments}")
     
     return render(request, 'userPanel.html', {
         'user':user,
@@ -327,6 +343,7 @@ def userPanel(request):
         'appointments':appointments,
         'role': role,
         'image': image,
+        'notifications': notifications,
         'media_root': settings.MEDIA_ROOT
     })
 
@@ -419,14 +436,16 @@ def staffPanel(request, **extra_fields):
         clicked_button = request.POST.get('button_id')
         if clicked_button == "complete":
             #Filter to retrieve only available times from each date before displaying them to the user            
-            print(f"{extra_fields} {request.POST.get('button_id')}")
             note = request.POST.get("note")
             patient = Appointment.objects.get(app_id=app_id).uuid.name
             Appointment.objects.filter(app_id=app_id).update(
                 app_id=app_id,
                 note = note,
                 completed=True
-                ) 
+                )
+            appointment =  Appointment.objects.get(app_id=app_id)
+            from .signals import appointment_updated
+            appointment_updated(sender=Appointment, instance=appointment)
             messages.success(request, f"Completed, and sent a note to {patient}")
         elif clicked_button == "undo":
             patient = Appointment.objects.get(app_id=app_id).uuid.name
@@ -434,7 +453,7 @@ def staffPanel(request, **extra_fields):
                 app_id=app_id,
                 completed=False
             )
-            messages.info(request, f"You have confirmed your appointment with {patient} is not complete.")
+            messages.info(request, f"Confirmed, appointment with {patient} is not complete.")
             
         if request.META.get('HTTP_REFERER') == 'http://127.0.0.1:8000/staff-panel/past?':  
             return redirect("http://127.0.0.1:8000/staff-panel/past?")     
@@ -462,3 +481,5 @@ def staffPanel(request, **extra_fields):
         "user": user,
         "name": user.name,
     })     
+    
+    

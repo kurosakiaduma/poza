@@ -74,7 +74,7 @@ SERVICE_CHOICES = (
     ("Ophthalmology", "Ophthalmology"),
     ("Paediatrics and Child Health", "Paediatrics and Child Health"),
     ("Pain Management", "Pain Management"),
-    ("Physician /Internal Medicine", "Physician /Internal Medicine"),
+    ("Physician /Internal Medicine", "Physician / Internal Medicine"),
     ("Radiology", "Radiology"),
     )
 TIME_CHOICES = (
@@ -129,6 +129,7 @@ class Persona(AbstractUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     last_update = models.DateTimeField(_('last updated'), auto_now=True)
+    last_logged = models.DateTimeField(default=datetime.now)
 
     objects = PersonaManager()
     
@@ -161,4 +162,14 @@ class Appointment(models.Model):
     note = models.TextField(default="")
     completed = models.BooleanField(default=False)
     def __str__(self):
-        return f"{self.app_id}| {self.uuid.name} | {self.service} |day: {self.day} | time: {self.time}| {self.price} | {self.note}"
+        return f"{self.app_id}| {self.uuid.name} | {self.service} |day: {self.day} | time: {self.time}| price: {self.price} | {self.note}"
+
+class Notification(models.Model):
+    id = models.UUIDField(default=uuid.uuid1, primary_key=True)
+    notif_id = models.IntegerField(null=False)
+    persona_id = models.ForeignKey(Persona, on_delete=models.CASCADE)
+    message = models.TextField()
+    updated_at = models.DateTimeField(default=datetime.now)
+    def __str__(self):
+        return f"{self.notif_id}| {self.persona_id} | {self.message} |day: {self.updated_at}"
+    

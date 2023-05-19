@@ -7,8 +7,6 @@
 
 
 {% if user.is_authenticated and user.account_type != "PATIENT" %}
-
-
 <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
     <h1 class="text-center mt-5 mb-5">Staff Panel</h1>
     <div class="row">
@@ -42,62 +40,62 @@
           <tbody id="myTable">
               {% for item in items %}
               {% if user.name == item.assigned_doctor or user.account_type == "ADMIN"%}
-            <tr>
-              <td class="text-center">{{item.day}}</td>
-              <td class="text-center">{{item.service}}</td>
-              <td class="text-center">{{item.uuid.name}}</td>
-              <td class="text-center">{{item.time}}</td>
-              <td class="text-center">
-                <form action='{% url "staffPanel" app_id=item.app_id%}', method="post", class="me-2 ms-2">
-                  {% csrf_token %}
-                  <div class="row">
-                    
-                      {% if not item.completed %}
-                      <textarea type="text" name="note" id="note" style="height: 150px; border-color:green", placeholder,="Enter any comments, notes or remarks for the patient here...", class="rounded">{{item.note}}</textarea>
-                      {% else %}
-                      <textarea readonly="True" type="text" name="note" id="note" style="height: 150px; border-color:red;" class="rounded" placeholder="Enter any comments, notes or remarks for the patient here...">{{item.note}}</textarea>
-                      {% endif %}
-                    
-                    <div class="col">
-                      {%if not item.completed %}
-                      <button type="submit" class="btn btn-success  text-light" id="complete" style="margin-top: 15;" name="button_id" value="complete">Check Completed</button>
-                      {% else %}
-                      <button type="submit" class="btn btn-danger  text-light" id="incomplete" name="button_id" value="undo" style="margin-top: 15;">Check Undone</button>
-                      {% endif %}
+              <tr>
+                <td class="text-center">{{item.day}}</td>
+                <td class="text-center">{{item.service}}</td>
+                <td class="text-center">{{item.uuid.name}}</td>
+                <td class="text-center">{{item.time}}</td>
+                <td class="text-center">
+                  <form action='{% url "staffPanel" app_id=item.app_id%}', method="post", class="me-2 ms-2">
+                    {% csrf_token %}
+                    <div class="row">
+                      
+                        {% if not item.completed %}
+                        <textarea type="text" name="note" id="note" style="height: 150px; border-color:green", placeholder,="Enter any comments, notes or remarks for the patient here...", class="rounded">{{item.note}}</textarea>
+                        {% else %}
+                        <textarea readonly="True" type="text" name="note" id="note" style="height: 150px; border-color:red;" class="rounded" placeholder="Enter any comments, notes or remarks for the patient here...">{{item.note}}</textarea>
+                        {% endif %}
+                      
+                      <div class="col">
+                        {%if not item.completed %}
+                        <button type="submit" class="btn btn-success  text-light" id="complete" style="margin-top: 15;" name="button_id" value="complete">Check Completed</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-danger  text-light" id="incomplete" name="button_id" value="undo" style="margin-top: 15;">Check Undone</button>
+                        {% endif %}
+                      </div>
                     </div>
-                  </div>
-                </form>
-              </td>
-            </tr>
-              {% endif %}
-              {% endfor %}
-          </tbody>
-        </table>
+                  </form>
+                </td>
+              </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
       </div>
 
-</div>
-
-{% else %}
+  {% else %}
 
 <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 alert alert-danger" role="alert">
-  This page is only accessible to staff!
+  <p>This page is only accessible to staff!</p>
   <a href="{% url 'login' %}" class="btn btn-primary text-white">Sign in</a>
 </div>
 
-{% endif %}
+  {% endif %}
 
-<!--Staff Panel Search-->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <!--Staff Panel Search-->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
-<script>
-    $(document).ready(function(){
-      $("#myInput").on("keyup", function() {
-        var value = $(this).val().toLowerCase();
-        $("#myTable tr").filter(function() {
-          $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+  <script>
+      $(document).ready(function(){
+        $("#myInput").on("keyup", function() {
+          var value = $(this).val().toLowerCase();
+          $("#myTable tr").filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+          });
         });
       });
-    });
-</script>
+  </script>
 
-{% endblock %}
+  {% endblock %}
