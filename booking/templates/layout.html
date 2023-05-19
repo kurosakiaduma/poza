@@ -56,9 +56,11 @@
                             </a>
                             <ul class="dropdown-menu  border zNav">
                               <li><a class="dropdown-item" href="{% url 'userPanel' %}">User Panel</a></li>
-                              <li><hr class=""></li>
                               {% if user.is_superuser %}
+                              <li><hr class=""></li>
                               <li><a class="dropdown-item" href="{% url 'register' %}">Doctor Registration Form</a></li>
+                              <li><hr class=""></li>
+                              <li><a class="dropdown-item" href="{% url 'analytics' %}">Analytics Dashboard</a></li>
                               {% endif %}
                               <li><hr class=""></li>
                               <li><a class="dropdown-item" href="{% url 'logout' %}">Sign Out</a></li>

@@ -49,31 +49,31 @@ def service_times(service):
     if service == "Nephrology":
         times = {
                 "Monday": ["11:30 AM"],
-                "Wednesday": ["2 PM"]
+                "Wednesday": ["2:00 PM"]
                 }
     elif service == "Dermatology":
             times = {
-                "Tuesday": ["2 PM"]
+                "Tuesday": ["2:00 PM"]
                 }
     elif service in ["Anaesthesia and Critical Care Medicine"]:
             times = {
-                "Wednesday": ["9 AM","2 PM"]
+                "Wednesday": ["9:00 AM","2:00 PM"]
                 }
     elif service in ["Adult Neurology"]:
             times = {
-                "Wednesday": ["9 AM","2 PM"]
+                "Wednesday": ["9:00 AM","2:00 PM"]
                 }
     elif service == "Interventional Cardiology":
             times = {
-                "Saturday": ["10 AM"]
+                "Saturday": ["10:00 AM"]
                 }
     elif service == "Anaesthesia":
             times = {
-                "Thursday": ["11 AM"]
+                "Thursday": ["11:00 AM"]
                 }
     elif service == "Radiology":
             times = {
-                "Thursday": ["10 AM"]
+                "Thursday": ["10:00 AM"]
                 }
     elif service == "General Surgery":
             times = {
@@ -84,41 +84,41 @@ def service_times(service):
                 }
     elif service == "Ophthalmology":
             times = {
-                "Tuesday": ["2 PM"]
+                "Tuesday": ["2:00 PM"]
                 }
     elif service == "Ear, Nose and Throat (ENT)":
             times = {
-                "Monday": ["10 AM"],
-                "Tuesday":["2 PM"],
-                "Wednesday": ["2 PM"],
-                "Saturday":["9 AM"]
+                "Monday": ["10:00 AM"],
+                "Tuesday":["2:00 PM"],
+                "Wednesday": ["2:00 PM"],
+                "Saturday":["9:00 AM"]
                 }
     elif service == "Physician / Internal Medicine":
             times = {
-                "Monday": ["10 AM"],
-                "Thursday": ["9 AM", "11 AM"],
-                "Saturday": ["2 PM"]
+                "Monday": ["10:00 AM"],
+                "Thursday": ["9:00 AM", "11 AM"],
+                "Saturday": ["2:00 PM"]
                 }
     elif service == "Paediatrics and Child Health":
             times = {
-                "Monday": ["8 AM"],
-                "Tuesday": ["9 AM"],
-                "Wednesday": ["10 AM"],
-                "Thursday": ["8 AM"]
+                "Monday": ["8:00 AM"],
+                "Tuesday": ["9:00 AM"],
+                "Wednesday": ["10:00 AM"],
+                "Thursday": ["8:00 AM"]
                 }
     elif service == "Adult Cardiology":
             times = {
-                "Thursday": ["8 AM", "12 PM"],
-                "Saturday": ["2 PM"]
+                "Thursday": ["8:00 AM", "12:00 PM"],
+                "Saturday": ["2:00 PM"]
             }
     elif service == "Pain Management":
             times = {
-                "Thursday": ["11 AM"]
+                "Thursday": ["11:00 AM"]
             }
     elif service == "Gynaecology / Laparoscopic / Obsterics":
             times = {
-                "Monday": ["10 AM"],
-                "Tuesday": ["9 AM"]
+                "Monday": ["10:00 AM"],
+                "Tuesday": ["9:00 AM"]
             }
         
     return times    
@@ -536,14 +536,101 @@ def analytics(request):
         return redirect("index")
     appointments = Appointment.objects.all().values()
     import pandas as pd
-    import pdb; pdb.set_trace()
     import plotly.express as px
+    import pytz
+    colors = px.colors.qualitative.Plotly[:20]
     
     df = pd.DataFrame.from_records(appointments)
-    print(f"{df}\n{df.info()}\n{df.describe()}")
     
+
+    # Convert the time column to time datatype
+    df['time'] = pd.to_datetime(df['time'], format='%I:%M %p').dt.time
+
+    # Combine the day and time columns into a single column of datetime type
+    df['datetime'] = pd.to_datetime(df['day'].astype(str) + " " + df['time'].astype(str), format='%Y-%m-%d %H:%M:%S')   
+    # Print the dataframe with the new datetime column
+    print(f"{df}\n{df.info()}")
+    
+    fig = px.bar(df, x="day", y="price", color="service", template="plotly_dark", 
+                title="Prices over days", hover_data=["price"], 
+                text="price", labels={"price": "Price (KES)"}, opacity=0.8,
+                barmode="group")
+    plot_div = fig.to_html(full_html=False)
+
+    fig = px.bar(df, x="day", color = "service", template="plotly_dark",
+                title="Appointments by Service", labels={"day": "Day of the Week"})
+    plot_script = fig.to_html(full_html=False)
+
+    fig = px.pie(df, names="service", title="Appointments by Service", template="plotly_dark",
+                color_discrete_sequence=colors)
+    plot_pie_dist = fig.to_html(full_html=False)
+
+    fig = px.scatter_3d(df, x="day", y="service", z="price", color_discrete_sequence=colors,
+                        template="plotly_dark", title="Price Distribution by Day and Service",
+                        labels={"day": "Day of the Week"})
+    plot_box_dist = fig.to_html(full_html=False)
+    
+    # Group the data by day and service and calculate the average price for each group
+    df_grouped = df.groupby(["day", "service"]).mean().reset_index()
+
+    # Create a bar chart showing the average price for each service on each day of the week
+    fig = px.bar(df_grouped, x="day", y="price", color="service", template="plotly_dark",
+                title="Average Price by Service and Day of the Week", labels={"price": "Price (KES)"})
+    plot_bar_day_service = fig.to_html(full_html=False)
+
+    # Create a new column that indicates whether an appointment was completed or not
+    df["completed"] = df["completed"].astype(int)
+
+    # Group the data by day and service and calculate the percentage of appointments that were completed for each group
+    df_grouped = df.groupby(["day", "service"]).mean().reset_index()
+
+    # Create a pie chart showing the percentage of appointments that were completed for each service on each day of the week
+    fig = px.pie(df_grouped, names="service", values="completed", color="service", template="plotly_dark",
+                title="Percentage of Completed Appointments by Service and Day")
+    plot_pie_completed = fig.to_html(full_html=False)
+
+
+    # Convert the timezone-naive datetime object to a timezone-aware datetime object
+    df["datetime"] = df["datetime"].apply(lambda x: pytz.timezone('UTC').localize(x))
+
+    # Create a new column that indicates the time between when an appointment was ordered and when it was scheduled to take place
+    df["time_to_appointment"] = abs((df["time_ordered"] - df["datetime"]).dt.days)
+
+    # Group the data by service and calculate the average time for each group
+    df_grouped = df.groupby("service").mean().reset_index()
+
+    # Create a line chart showing the average time between when an appointment was ordered and when it was scheduled to take place for each service
+    fig = px.line(df_grouped, x="service", y="time_to_appointment", template="plotly_dark",
+    title="Average Time Between Order and Appointment by Service",
+    labels={"time_to_appointment": "Time to Appointment (Days)", "service": "Service"})
+    
+    plot_line_dist = fig.to_html(full_html=False)
+
+    print(f"{df}\n{df.info()}\n{df_grouped}\n{df_grouped.info()}")
+    
+    # Extract the hour value from the datetime object and create a new column that indicates the time of day (morning, afternoon, evening) for each appointment
+    df["datetime"] = pd.cut(df["datetime"].dt.hour,
+                                bins=[0, 12, 17, 24],
+                                labels=["Morning", "Afternoon", "Evening"])
+
+    # Create a scatter plot showing the relationship between time of day and price for each service on each day of the week
+    fig = px.bar(df, x="datetime", y="price", color="time", template="plotly_dark",
+                    title="Price Distribution by Time of Day and Day of the Week",
+                    labels={"price": "Price (KES)", "time": "Time of Day", "datetime": "Time of day"})
+    plot_scatter_tod = fig.to_html(full_html=False)
+
+
     return render(request, "analytics.html", {
         "user": user,
         "appointments":appointments,
         "df": df,
+        "fig": fig,
+        "plot_div": plot_div,
+        "plot_script": plot_script,
+        "plot_pie_dist": plot_pie_dist,
+        "plot_box_dist": plot_box_dist,
+        "plot_bar_day_service": plot_bar_day_service,
+        "plot_pie_completed": plot_pie_completed,
+        "plot_scatter_tod": plot_scatter_tod,
+        "plot_line_dist": plot_line_dist,
     })

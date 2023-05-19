@@ -1,4 +1,4 @@
-<title>Staff Panel</title>
+<title>Analytics</title>
 {% extends 'layout.html' %}
 {% load static %}
 {% block body %}
@@ -6,103 +6,48 @@
 
 
 
-{% if user.is_authenticated and user.account_type != "PATIENT" %}
-<div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
-  <div class="row text-center">
-    <h1 class="">Staff Panel</h1>
-  <div class="col">
-    <form action='{% url "staffPanel" foo="upcoming"%}' class="form-inline">
-      <button type="submit" class="btn btn-success text-light mx-1" id="upcoming">Upcoming</button>
-    </form>
-  </div>
-  <div class="col">
-    <form action='{% url "staffPanel" foo="past"%}' class="form-inline">
-      <button type="submit" class="btn btn-success text-light mx-1" id="past">Past</button>
-    </form>
-  </div>
-</div>      
-    <br>
-    <br>
-    <input class="form-control form-control-lg fs-3 border border-success" id="myInput" type="text" placeholder="Search Appointment">
-    <br>
-    
-    <div class="table-responsive">
-      <table class="table align-middle table-bordered table-striped table-hover mx-auto">
-          <thead>
-            <tr>
-              <th class="text-center" scope="col">Date</th>
-              <th class="text-center" scope="col">Service</th>
-              <th class="text-center" scope="col">Patient</th>
-              <th class="text-center" scope="col">Time</th>
-              <th class="text-center" scope="col">Doctor's Remark</th>
-            </tr>
-          </thead>
-          <tbody id="myTable">
-              {% for item in items %}
-              {% if user.name == item.assigned_doctor or user.account_type == "ADMIN"%}
-              <tr>
-                <td class="text-center">{{item.day}}</td>
-                <td class="text-center">{{item.service}}</td>
-                <td class="text-center">{{item.uuid.name}}</td>
-                <td class="text-center">{{item.time}}</td>
-                <td class="text-center">
-                  <form action='{% url "staffPanel" app_id=item.app_id%}', method="post", class="me-2 ms-2">
-                    {% csrf_token %}
-                    <div class="row">
-                        <style>
-                          #note {
-                            width: 100%;
-                            box-sizing: border-box;
-                            height: 100%;
-                            min-height: 440;
-                        }
-                        </style>  
-                        {% if not item.completed %}
-                        <textarea type="text" name="note" id="note" style="height: 150px; border-color:green", placeholder,="Enter any comments, notes or remarks for the patient here...", class="rounded">{{item.note}}</textarea>
-                        {% else %}
-                        <textarea readonly="True" type="text" name="note" id="note" style="height: 150px; border-color:red;" class="rounded" placeholder="Enter any comments, notes or remarks for the patient here...">{{item.note}}</textarea>
-                        {% endif %}
-                      
-                      <div class="col">
-                        {%if not item.completed %}
-                        <button type="submit" class="btn btn-success  text-light" id="complete" style="margin-top: 15;" name="button_id" value="complete">Check Completed</button>
-                        {% else %}
-                        <button type="submit" class="btn btn-danger  text-light" id="incomplete" name="button_id" value="undo" style="margin-top: 15;">Check Undone</button>
-                        {% endif %}
-                      </div>
-                    </div>
-                  </form>
-                </td>
-              </tr>
-                {% endif %}
-                {% endfor %}
-            </tbody>
-          </table>
+{% if user.is_authenticated and user.account_type == "ADMIN" %}
+  <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
+    <div class="container">
+      <h1 class="text-center">Analytics Dashboard</h1>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          {{ plot_div|safe }}
         </div>
-
+        <div class="col-md-6">
+          {{ plot_script|safe }}
+        </div>
       </div>
-
-  {% else %}
-
-<div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 alert alert-danger" role="alert">
-  <p>This page is only accessible to staff!</p>
-  <a href="{% url 'login' %}" class="btn btn-primary text-white">Sign in</a>
-</div>
-
-  {% endif %}
-
-  <!--Staff Panel Search-->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-
-  <script>
-      $(document).ready(function(){
-        $("#myInput").on("keyup", function() {
-          var value = $(this).val().toLowerCase();
-          $("#myTable tr").filter(function() {
-            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-          });
-        });
-      });
-  </script>
-
-  {% endblock %}
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          {{ plot_pie_dist|safe }}
+        </div>
+        <div class="col-md-6">
+          {{ plot_box_dist|safe }}
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          {{ plot_bar_day_service|safe }}
+        </div>
+        <div class="col-md-6">
+          {{ plot_pie_completed|safe }}
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          {{ plot_scatter_tod|safe }}
+        </div>
+        <div class="col-md-6">
+          {{ plot_line_dist|safe }}
+        </div>
+      </div>
+      <hr>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

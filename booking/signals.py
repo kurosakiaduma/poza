@@ -36,9 +36,10 @@ def appointment_updated(sender, instance, **kwargs):
             notif_id=instance.app_id,
         )
         
-        print(f"{notification} <=== SIGNAL HALWAY")
+        '''Debug line'''
+        print(f"{notification} <=== SIGNAL HALFWAY")
+        
         if notification.persona_id:
-            print("HIIIIIIIIIIIIIIIIIIIIIIIIIIII")
             notification.message = message
             notification.updated_at = updated_at
         else:
