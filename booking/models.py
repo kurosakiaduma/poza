@@ -115,6 +115,16 @@ def at_least_age_18(value):
         )
 
 class Persona(AbstractUser, PermissionsMixin):
+    """
+    Custom user model that extends Django's AbstractUser and PermissionsMixin classes.
+
+    Args:
+        AbstractUser (AbstractBaseUser): Base class for user authentication that provides the core implementation for a User model.
+        PermissionsMixin (Model): Mixin class that provides fields and methods for handling permissions and groups.
+
+    Returns:
+        Persona: A new instance of the Persona model.
+    """
     uuid = models.UUIDField(primary_key=True, auto_created=True, default=uuid.uuid4)
     username = None
     name = models.CharField(max_length=50, null=False)
@@ -172,4 +182,3 @@ class Notification(models.Model):
     updated_at = models.DateTimeField(default=datetime.now)
     def __str__(self):
         return f"{self.notif_id}| {self.persona_id} | {self.message} |day: {self.updated_at}"
-    
