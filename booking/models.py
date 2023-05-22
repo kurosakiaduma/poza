@@ -78,14 +78,14 @@ SERVICE_CHOICES = (
     ("Radiology", "Radiology"),
     )
 TIME_CHOICES = (
-    ("8 AM", "8 AM"),
-    ("9 AM", "9 AM"),
-    ("10 AM", "10 AM"),
-    ("11 AM", "11 AM"),
+    ("8:00 AM", "8:00 AM"),
+    ("9:00 AM", "9:00 AM"),
+    ("10:00 AM", "10:00 AM"),
+    ("11:00 AM", "11:00 AM"),
     ("11:30 AM", "11:30 AM"),
-    ("12 PM", "12 PM"),
+    ("12:00 PM", "12:00 PM"),
     ("1:30 PM", "1:30 PM"),
-    ("2 PM", "2 PM"),
+    ("2:00 PM", "2:00 PM"),
     )
 GENDER_CHOICES = (
     ("Male","Male"),
