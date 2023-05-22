@@ -24,6 +24,16 @@ def dayToWeekday(x):
     return y
 
 def validWeekday(days):
+    """
+    Returns a list of weekdays in the next given number of days.
+
+    Parameters:
+    days (int): The number of days to look ahead.
+
+    Returns:
+    list: A list of dates in the format '%Y-%m-%d' that are not Friday or Sunday.
+
+    """    
     #Loop days you want in the next 21 days:
     today = datetime.now()
     weekdays = []
@@ -35,6 +45,18 @@ def validWeekday(days):
     return weekdays
     
 def isWeekdayValid(x, service, times):
+    """
+    Returns a list of valid workdays for a given service and times.
+
+    Parameters:
+    x (list): A list of dates in the format '%Y-%m-%d'.
+    service (str): The name of the service to check.
+    times (dict): A dictionary with keys as weekdays and values as lists of time slots.
+
+    Returns:
+    list: A list of strings with the format 'date weekday time' for each valid workday.
+
+    """
     validWorkdays = []
     for j in x:
         if datetime.strptime(j, '%Y-%m-%d').strftime('%A') in times.keys():
@@ -45,6 +67,18 @@ def isWeekdayValid(x, service, times):
     return validWorkdays
 
 def service_times(service):
+    """
+    Returns a dictionary of available times for a given service.
+
+    Parameters:
+    service (str): The name of the service to check.
+
+    Returns:
+    dict: A dictionary with keys as weekdays and values as lists of time slots.
+
+    Raises:
+    ValueError: If the service is not valid or not found.
+    """    
     # Handling timing logic for each service
     if service == "Nephrology":
         times = {
@@ -127,29 +161,44 @@ def index(request):
     return render(request, "index.html",{})
 
 def assign_doctor(appears, doctors):
-    """Logic for assigning a doctor. I obtain a frequency queryset from the 
-        appointments object on 'assigned_doctor', filter out values that have not appeared global least
-        and randomly select the the index value of the remaining values in the doctors list 
     """
+    This function takes in two arguments:
+    - appears: a dictionary containing the frequency of each doctor's appearance in existing appointments
+    - doctors: a list of available doctors for the selected service.
+    - The function returns the name of the assigned doctor as a string.
+    """
+    
+    # Loop through the items in the 'appears' dictionary
     for i, j in appears.items():
+        # Check if the length of the 'appears' dictionary is 1
         if len(list(appears.keys())) == 1:
+            # If it is, break out of the loop
             break
+        # Check if the current value is not equal to the minimum value in the 'appears' dictionary
         if j != min(appears.values()):
+            # If it is not, try to remove the current key from the 'doctors' list
             try:
                 doctors.remove(i)
             except ValueError:
+                # If the key is not in the 'doctors' list, ignore the error
                 pass
-               
+    
+    # Check if the length of the 'doctors' list is 1
     if len(doctors) == 1:
+        # If it is, assign the first (and only) doctor in the list as the assigned doctor
         assigned_doctor = doctors[0]
     else:
+        # If it is not, try to randomly select an index from the 'doctors' list
         try:
             from random import randint
-            idx = randint(0, (len(doctors)-1))  
-            print(f"THIS IS THE IDX ==>{idx}")          
+            idx = randint(0, (len(doctors)-1))
+            print(f"THIS IS THE IDX ==>{idx}")
             assigned_doctor = doctors[idx]
         except IndexError:
+            # If an IndexError occurs, ignore it
             pass
+    
+    # Return the name of the assigned doctor as a string
     return assigned_doctor    
 
 def pricing(service):
@@ -220,45 +269,51 @@ def booking(request):
         })
 
 def bookingSubmit(request):
-    user = request.user
-    
+    """
+    This function handles the submission of a booking request.
+    :param request: The HTTP request object
+    """
+    user = request.user  # Get the current user from the request object
+
+    # Calculate the minimum and maximum dates for booking
     today = datetime.now()
     minDate = today.strftime('%Y-%m-%d')
     deltatime = today + timedelta(days=21)
     strdeltatime = deltatime.strftime('%Y-%m-%d')
     maxDate = strdeltatime
-    
-    #Get stored data from django session:
+
+    # Get stored data from django session:
     service = request.session.get('service')
     validWorkdays = request.session.get('validWorkdays')
     assigned_doctor = ""
-        
+
+    # Calculate the price for the selected service and store it in the session
     price = pricing(service)
     request.session['price'] = price
     print(f"{request.session['price']}")
-    
-    
+
     if request.method == 'POST':
-        #Filter to retrieve only available times from each date before displaying them to the user
+        # Obtain all information data from objects pertaining to the same service
         appointments = Appointment.objects.filter(service=service)
-        
-        #Retrieve Doctor names from the filtered Doctor objects
+
+        # Retrieve Doctor names from the filtered Doctor objects
         doctors= []
-        service_doctors = Doctor.objects.filter(role=service).values_list("name") 
-        appears = appointments.values_list('assigned_doctor').annotate(frequency = Count('assigned_doctor'))
-        
+        service_doctors = Doctor.objects.filter(role=service).values_list("name")
+        appears = appointments.values_list('assigned_doctor').annotate(frequency=Count('assigned_doctor'))
+
         for doctor in service_doctors:
             doctors.append(doctor[0])
 
         print(f"THE APPOINTMENT FORMAT {appointments}, \nTHE DOCTORS ARE:{doctors}")
-    
+
         appears = dict(appears)
-        
+
+        # Assign a doctor to the appointment using the assign_doctor function
         assigned_doctor = assign_doctor(appears=appears, doctors=doctors)
 
         print(f"{appears} {doctors}\nASSIGNED DOCTOR-> {assigned_doctor}")
-        
-        
+
+        # Get the selected date, day and time from the submitted form data
         date_day_time = request.POST.get('date_day_time')
         date = date_day_time.split()[0]
         day = date_day_time.split()[1]
@@ -267,32 +322,33 @@ def bookingSubmit(request):
 
         if service != None:
             if date <= maxDate and date >= minDate:
-                if day !="Friday" and day != "Sunday" :
+                if day != "Friday" and day != "Sunday":
                     if Appointment.objects.filter(service=service, day=date, time=time).count() < 1:
+                        # Create a new Appointment object using get_or_create method
                         AppointmentForm = Appointment.objects.get_or_create(
-                            service = service,
-                            day = date,
-                            time = time,
-                            assigned_doctor = assigned_doctor,
-                            uuid = user, 
-                            price = price
-                            )
-                        validWorkdays.remove(date+' '+day+' '+time)
+                            service=service,
+                            day=date,
+                            time=time,
+                            assigned_doctor=assigned_doctor,
+                            uuid=user,
+                            price=price
+                        )
+                        validWorkdays.remove(date + ' ' + day + ' ' + time)
                         messages.success(request, "Appointment Saved!")
-                        render(request, 'index.html',)
+                        render(request, 'index.html', )
                     else:
                         messages.success(request, "The Selected Time Has Been Reserved Before!")
                 else:
                     messages.success(request, "The Selected Date Is Incorrect")
             else:
-                    print(f"{date}")
-                    messages.success(request, "The Selected Date Isn't In The Correct Time Period!")
+                print(f"{date}")
+                messages.success(request, "The Selected Date Isn't In The Correct Time Period!")
         else:
             messages.success(request, "Please Select A Service!")
-    
+
     return render(request, 'bookingSubmit.html', {
         'validWorkdays': validWorkdays,
-        })
+    })
 @csrf_exempt
 @login_required
 def userPanel(request, **extra_fields):
@@ -392,6 +448,17 @@ def userPanel(request, **extra_fields):
     })
 
 def userUpdate(request, app_id):
+    """
+    Updates the user's appointment details and assigns a doctor.
+
+    Parameters:
+    request (HttpRequest): The request object that contains the user and session data.
+    app_id (int): The id of the appointment to be updated.
+
+    Returns:
+    HttpResponse: A redirect to the user panel or a warning message if the update is not possible.
+
+    """
     user = request.user
     
     appointment = Appointment.objects.get(app_id__exact=app_id)
@@ -474,6 +541,17 @@ def userUpdate(request, app_id):
 
 
 def staffPanel(request, **extra_fields):
+    """
+    Handles the staff panel actions and displays the appointments.
+
+    Parameters:
+    request (HttpRequest): The request object that contains the user and session data.
+    **extra_fields: Optional keyword arguments that can contain the app_id or the past flag.
+
+    Returns:
+    HttpResponse: A redirect to the staff panel or the past appointments page, or a message if an action is performed.
+
+    """
     user = request.user
     if request.method == "POST":
         app_id =  extra_fields.get('foo', None)
@@ -527,6 +605,16 @@ def staffPanel(request, **extra_fields):
     })     
     
 def analytics(request):
+    """
+    Renders the analytics page for the admin user.
+
+    Parameters:
+    request (HttpRequest): The request object that contains the user and session data.
+
+    Returns:
+    HttpResponse: A render of the analytics.html template with the users' and appointments' plot data.
+
+    """
     # Get the user object from request
     user = request.user
     
@@ -535,6 +623,7 @@ def analytics(request):
         messages.error(request, "Invalid request!")
         return redirect("index")
     appointments = Appointment.objects.all().values()
+    users = Persona.objects.all().values()
     import pandas as pd
     import plotly.express as px
     import pytz
