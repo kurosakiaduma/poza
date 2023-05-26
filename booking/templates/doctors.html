@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block body %}
+<div class="container">
+  <div class="row">
+    {%for doc in docs%}
+    <div class="col-sm-4">
+      <div class="card mb-3 shadow-sm">
+        <!-- Card image -->
+        <img src="http://127.0.0.1:8887/uploads/{{ doc.image }}" class="card-img-top" alt="{{ doc.name }}" style="height: 200px; object-fit:contain;">
+        <!-- Card body -->
+        <div class="card-body">
+          <!-- Card title -->
+          <h5 class="card-title">{{ doc.name }}</h5>
+          <!-- Card text -->
+          <p class="card-text">Speciality: {{ doc.role }}</p>
+          <!-- Card button (optional) -->
+          <a href="{% url 'booking' %}" class="btn btn-primary">Book an appointment</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
