@@ -23,7 +23,7 @@ def chat(request):
     if True in status or user.account_type == "DOCTOR":
         pass
     else:
-        messages.warning(request, "You don't have access to MediBot. Access is limited to users who have made appointment in the last 24 hours.")
+        messages.warning(request, "You don't have access to MediBot. Access is limited to users who have made an appointment in the last 24 hours.")
         return redirect("http://127.0.0.1:8000/")
     chats = Chat.objects.all()
     
