@@ -14,4 +14,5 @@ urlpatterns = [
     path('staff-panel/<slug:app_id>', views.staffPanel, name='staffPanel'),
     path('staff-panel/', views.staffPanel, name='staffPanel'),
     path('analytics/', views.analytics, name='analytics'),
+    path('doctors/', views.doctors, name='doctors'),
 ]+  static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
