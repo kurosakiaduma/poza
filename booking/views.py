@@ -13,25 +13,6 @@ from django.forms import *
 from django.views.decorators.csrf import csrf_exempt
 from .forms import *
 import json, stripe, traceback
-
-stripe.api_key = "sk_test_51NC5ElIAYIz2PADTQg8hDIafDkmPsTjEIlbeu5qSJHDrSiduqzfRD3WlfiiF51ycgEg3pq0qOXV5zJNWZ7k2uFgU00fpJrVC9l"
-
-starter_subscription = stripe.Product.create(
-  name="Applicatio",
-  description="$12/Month subscription",
-)
-
-starter_subscription_price = stripe.Price.create(
-  unit_amount=1200,
-  currency="usd",
-  recurring={"interval": "month"},
-  product=starter_subscription['id'],
-)
-
-# Save these identifiers
-print(f"Success! Here is your starter subscription product id: {starter_subscription.name}")
-print(f"Success! Here is your starter subscription price id: {starter_subscription_price.id}")
-
 def index(request, **extra_fields):
     """Function that render:
     - the default home page for Anonymous Users
