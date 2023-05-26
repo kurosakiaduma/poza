@@ -474,7 +474,7 @@ def cancel(request):
     price = pricing(service)
     request.session['price'] = price
     print(f"{request.session['price']}")
-    messages.warning(request, "Appointment was not saved! Please retry.")
+    messages.warning(request, "Appointment cancelled!")
     
     # Render form template
     return render(request, 'bookingSubmit.html', {
