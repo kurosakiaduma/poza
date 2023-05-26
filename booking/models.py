@@ -147,7 +147,18 @@ class Persona(AbstractUser, PermissionsMixin):
     REQUIRED_FIELDS = ['password']
     
     def __str__(self):
-        return self.email    
+        return self.email
+    
+    def get_real_instance(self):
+        """
+        Returns the instance of the most specific subclass of this object.
+        """
+        for subclass in self.__class__.__subclasses__():
+            try:
+                return getattr(self, subclass.__name__.lower())
+            except AttributeError:
+                pass
+        return self    
 
 
 class Doctor(Persona):

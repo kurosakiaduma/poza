@@ -781,3 +781,23 @@ def analytics(request):
         "plot_line_dist": plot_line_dist,
         "plot_patients": plot_patients,
     })
+    
+def doctors(request):
+    # Get all Persona objects whose account_type is "DOCTOR"
+    personas = Persona.objects.filter(account_type="DOCTOR")
+
+    # Get all Doctor objects
+    doktaris = Doctor.objects.all()
+
+    # Get the intersection of the two querysets by matching the uuid field
+    from queryset_sequence import QuerySetSequence
+    docs = QuerySetSequence(personas, doktaris.filter(uuid__in=personas.values("uuid")))
+    
+    for doc in docs:
+        instance = doc.get_real_instance()
+        if isinstance(instance, Doctor):
+            # Access the role field
+            print(instance.role) 
+    return render(request, "doctors.html", {
+        "docs": docs,
+    })
