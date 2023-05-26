@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
+import django_pesapal
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,7 +27,7 @@ SECRET_KEY = "django-insecure-tb@$=(h+a6t$u)2kq86+o)c+94y!+t-5(7&s%o6*efxt0$+9@=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [".railway.app"]
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -37,10 +39,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     "django_extensions",
-    "booking" ,#Booking
-    "chat", #MediBot microservice
-    "members", #Registration service
+    "djstripe", # Django's STRIPE API integration
+    "booking" ,# Booking
+    "chat", # MediBot microservice
+    "members", # Registration service
+    'queryset_sequence', # Queryset filtering service
     'ajax_select',  #Caching service
 ]
 
@@ -71,6 +76,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "django.template.context_processors.media",
+                "booking.context_processors.services_processor",
             ],
         },
     },
@@ -134,8 +140,9 @@ MEDIA_URL = "/media/"
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATIC_ROOT =os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'),
+                    os.path.join(BASE_DIR, 'booking/templates/css'), ]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 # Authentication Backends
@@ -153,3 +160,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 #test settings for user
 USERNAME = "zaziebeets@gmail.com"
 PASSWORD = "@octo808"
+
+# Stripe settings for payment
+STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "sk_test_51NC5ElIAYIz2PADTQg8hDIafDkmPsTjEIlbeu5qSJHDrSiduqzfRD3WlfiiF51ycgEg3pq0qOXV5zJNWZ7k2uFgU00fpJrVC9l")
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY",'pk_test_51NC5ElIAYIz2PADTe6W9JoYsNxTywSiVtyz0bzOKZvzEsIOTawHNeD0HhTUO83evWnC9UuvxZJGV98eIe3ASkCk300vTMP9xBJ')
+DJSTRIPE_WEBHOOK_SECRET = "whsec_xxx"  # Get it from the section in the Stripe dashboard where you added the webhook endpoint
+DJSTRIPE_USE_NATIVE_JSONFIELD = True  # We recommend setting to True for new installations
+DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"

@@ -19,6 +19,7 @@ from django.conf.urls.static import static
 from django.urls import path, include
 from chat.views import Ajax
 from ajax_select import urls as ajax_select_urls
+import django_pesapal
 
 admin.autodiscover()
 
@@ -30,6 +31,7 @@ urlpatterns = [
     path("members", include("members.urls")),
     path('ajax', Ajax, name='ajax'),
     path(r'^ajax_select/', include(ajax_select_urls)),
+    #...
 ]
 
 if settings.DEBUG:
