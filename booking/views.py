@@ -62,6 +62,14 @@ def isWeekdayValid(x, service, times):
         if datetime.strptime(j, '%Y-%m-%d').strftime('%A') in times.keys():
             if Appointment.objects.filter(day=j, service=service ).count() < len(times[datetime.strptime(j, '%Y-%m-%d').strftime('%A')]):
                 for i in times[datetime.strptime(j, '%Y-%m-%d').strftime('%A')]:
+                    # Get the current date and time
+                    now = datetime.now()
+                    # Convert the string in the list to a datetime object
+                    dt = datetime.strptime(f'{j} {i}', '%Y-%m-%d %I:%M %p')
+                    # Check if the current date and time is greater than the date and time in the list
+                    if now > dt:
+                        # Skip appending it to the list
+                        continue
                     if Appointment.objects.filter(day=j, service=service, time=i).count() < 1:
                         validWorkdays.append(f'{j} {datetime.strptime(j, "%Y-%m-%d").strftime("%A")} {i}')
     return validWorkdays
@@ -348,6 +356,8 @@ def bookingSubmit(request):
 
     return render(request, 'bookingSubmit.html', {
         'validWorkdays': validWorkdays,
+        'service': service,
+        'price': price,
     })
 @csrf_exempt
 @login_required
@@ -622,23 +632,44 @@ def analytics(request):
     if user.account_type != "ADMIN":
         messages.error(request, "Invalid request!")
         return redirect("index")
+    
     appointments = Appointment.objects.all().values()
-    users = Persona.objects.all().values()
+    personas = Persona.objects.all().values()
     import pandas as pd
     import plotly.express as px
     import pytz
+    # Select palette of colors
     colors = px.colors.qualitative.Plotly[:20]
     
+    # Create dataframe from queryset of appointments objects
     df = pd.DataFrame.from_records(appointments)
     
+    # Create dataframe from queryset of personas objects
+    df_personas = pd.DataFrame.from_records(personas)
 
+    # Filter the users dataframe to keep only the rows where account_type is “PATIENT”
+    patients = df_personas[df_personas["account_type"] == "PATIENT"]
+    
+    # Group the patients dataframe by date_joined and count the number of users for each date:
+    patients_count = patients.groupby("date_joined")["uuid"].count().cumsum().reset_index()
+        
+    fig = px.line(patients_count, x="date_joined", y="uuid", title="Patient Users Sign-Ups",
+                  template="plotly_dark", line_shape='spline',
+                  labels={"uuid":"Patient Sign-Ups", "date_joined": "Datetime"},
+                  render_mode='svg', color_discrete_sequence=['#F63366'])
+
+    fig.update_traces(mode='markers+lines', marker=dict(size=8))
+
+    fig.update_layout(title_font=dict(size=24), xaxis_title_font=dict(size=18))
+    plot_patients = fig.to_html(full_html=False)
+    
     # Convert the time column to time datatype
     df['time'] = pd.to_datetime(df['time'], format='%I:%M %p').dt.time
 
     # Combine the day and time columns into a single column of datetime type
     df['datetime'] = pd.to_datetime(df['day'].astype(str) + " " + df['time'].astype(str), format='%Y-%m-%d %H:%M:%S')   
     # Print the dataframe with the new datetime column
-    print(f"{df}\n{df.info()}")
+    print(f"{df_personas}\n{df_personas.info()}")
     
     # Group the data by day and sum the prices for each day
     df_grouped = df.groupby('day').agg({'price': 'sum'}).reset_index()
@@ -748,4 +779,5 @@ def analytics(request):
         "plot_pie_completed": plot_pie_completed,
         "plot_scatter_tod": plot_scatter_tod,
         "plot_line_dist": plot_line_dist,
+        "plot_patients": plot_patients,
     })
