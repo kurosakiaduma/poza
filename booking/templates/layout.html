@@ -2,11 +2,47 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <!--Specifies the character encoding for the HTML Document-->
         <meta charset="utf-8">
+        <!-- Sets the viewport width to the device width and sets the initial zoom level to 1 -->
         <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!-- Microsoft Tile Color -->
+        <meta name="msapplication-TileColor" content="#da532c">
+        <!-- Theme Color for mobile browsers -->
+        <meta name="theme-color" content="#ffffff">
+        
+        <!--Favicon -->
+        <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
+        <!-- Apple Touch Icon for iOS devices -->
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+        <!-- Favicon for modern browsers -->
+        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
+        <!-- Web App Manifest for Android devices -->
+        <link rel="manifest" href="{% static 'site.webmanifest' %}">
+        <!-- Safari Pinned Tab Icon -->
+        <link rel="mask-icon" href="{% static 'safari-pinned-tab.svg' %}" color="#5bbad5">
+        <!-- Favicon for older browsers -->
+        <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
         <!-- CSS only -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        
+        <!-- layout.css -->
+        <link rel="stylesheet" href="{% static 'layout.css' %}">        
+        
+        <!-- Animate.css library -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+        <!--Google Sans font-->
+        <link href="https://fonts.googleapis.com/css?family=Google+Sans&display=swap" rel="stylesheet">
+
+        <!-- Add the Playfair Display font -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
         <!-- JavaScript Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous" defer></script>
         <!-- JavaScript Bundle with Popper -->
@@ -36,10 +72,13 @@
                                 <a class="nav-link active cHover" aria-current="page" href="{% url 'index' %}">Home</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link active cHover" href="#contact">Contact Us</a>
+                                <a class="nav-link active cHover" href="#footer">Contact Us</a>
                             </li>     
                             <li class="nav-item">
                                 <a class="nav-link active cHover" href="{% url 'booking' %}">Online Booking</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link active cHover" href="{% url 'doctors' %}">Doctors</a>
                             </li>                   
                             {% if user.is_authenticated %}
                             <!--Clinic Staff Link-->
@@ -55,15 +94,29 @@
                                 User
                                 </a>
                                 <ul class="dropdown-menu  border zNav">
-                                <li><a class="dropdown-item" href="{% url 'userPanel' %}">User Panel</a></li>
-                                {% if user.is_superuser %}
-                                <li><hr class=""></li>
-                                <li><a class="dropdown-item" href="{% url 'register' %}">Doctor Registration Form</a></li>
-                                <li><hr class=""></li>
-                                <li><a class="dropdown-item" href="{% url 'analytics' %}">Analytics Dashboard</a></li>
-                                {% endif %}
-                                <li><hr class=""></li>
-                                <li><a class="dropdown-item" href="{% url 'logout' %}">Sign Out</a></li>
+                                    <li>
+                                        <a class="dropdown-item cHover" href="{% url 'userPanel' %}">User Panel</a>
+                                    </li>
+                                    {% if user.account_type != "PATIENT" %}
+                                    <li><hr class=""></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item" href="{% url 'staffPanel' %}">Staff Panel</a>
+                                    </li>    
+                                    {% endif %}       
+                                    {% if user.is_superuser %}
+                                    <li><hr class=""></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'register' %}">Doctor Registration Form</a>
+                                    </li>
+                                    <li><hr class=""></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'analytics' %}">Analytics Dashboard</a>
+                                    </li>
+                                    {% endif %}
+                                    <li><hr class=""></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'logout' %}">Sign Out</a>
+                                    </li>
                                 </ul>
                             </li>
                             {% else %}
@@ -116,53 +169,55 @@
 
         {% block body %}
         {% endblock %}
-        <footer class="bg-dark text-white">
+        <footer class="bg-dark text-white" id="footer">
             <div class="container-fluid pt-3">
-                <section class="">
-                    <div class="container text-center text-md-start mt-5">
-                    <!-- Grid row -->
-                    <div class="row mt-3 text-center">
-                
-                        <!-- Grid column -->
-                        <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mb-4">
-                            <!-- Links -->
-                            <h5 class="text-uppercase fw-bold mb-4 textGradient" id="contact">
-                                Contact Us
-                            </h5>
+              <section class="">
+                <div class="container text-center text-md-start mt-5">
+                  <!-- Grid row -->
+                  <div class="row mt-3 text-center">
+                    <!-- Clinic name column -->
+                    <div class="col-md-4 col-lg-4 col-xl-4 mx-auto mb-4">
+                        <!-- Clinic Name  -->
+                        <h1 class="text-uppercase fw-bold mb-4 textGradient animate__animated animate__pulse" > 
+                            POZA                             
+                        </h1>
+                        <!---Clinic logo-->
+                        <img src="{% static 'logo_1.png' %}" alt="POZA Logo">
+                    </div>
+                    <!-- Services column -->
+                    <div class="col-md-4 col-lg-4 col-xl-4 col-sm-6 col-4 mx-auto mb-4">
+                        <!-- Links -->
+                        <hr>
+                        <h3 class="text-uppercase fw-bold mb-4 textGradient animate__animated animate__pulse"> Services </h3>
+                        <hr>
+                        {% for service in service_descriptions %}
+                        {% if forloop.counter0|divisibleby:10 %}
+                            <div class="row">
+                        {% endif %}
+                        <div class="col-md-6 col-lg-6 col-xl-6 col-sm-6 col-4">
                             <p>
-                                <a href="tel: 12345678" class=""><span class="cBlue">Tel: 12345678</span></a>
-                            </p>
-                            <p>
-                                <a class="uLine cHover" href="{% url 'booking' %}" >Online Booking</a>
+                            <a href="{% url 'booking' %}" class="uLine" style="color: inherit;" title="{{ service.1 }}" aria-label="{{ service.1 }}">
+                                {{ service.0 }}
+                            </a>
                             </p>
                         </div>
-                        <!-- Grid column -->
-                        
-                        <!-- Service links Regular -->
-                        <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mb-4">
-                            <!-- Links -->
-                            <h5 class="text-uppercase fw-bold mb-4 textGradient">
-                                Services
-                            </h5>
-                            <p>
-                                <a href="#!" class="uLine">Doctor care</a>
-                            </p>
-                            <p>
-                                <a href="#!" class="uLine">Nursing care</a>
-                            </p>
-                            <p>
-                                <a href="#!" class="uLine">Medical social services</a>
-                            </p>
-                            <p>
-                                <a href="#!" class="uLine">Homemaker or basic assistance care</a>
-                            </p>
-                        </div>
-                        <!-- Service links Regular -->
+                        {% if forloop.counter|divisibleby:10 or forloop.last %}
+                            </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>                    <!-- Google map column -->
+                    <div class="col-md-4 col-lg-4 col-xl-4 mx-auto mb-4">
+                        <hr>
+                        <h3 class="text-uppercase fw-bold mb-4 textGradient animate__animated animate__pulse"> 
+                            OUR LOCATION
+                        </h3>
+                        <hr>
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15955.24824277994!2d36.7727855!3d-1.286842!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f1a051a09442b%3A0x594ccea99edce21c!2sGertrude&#39;s%20Children&#39;s%20Hospital%20-%20Lavington%20Clinic!5e0!3m2!1sen!2ske!4v1685115513137!5m2!1sen!2ske" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
-                    <!-- Grid row -->
                     </div>
+                </div>
                 </section>
             </div>
-        </footer>
+        </footer>    
     </body>
 </html>

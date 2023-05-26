@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+{% load static %}
+<head>
+</head>
+{% block body %}
+<div class="container mt-3">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-lg">
+        <div class="card-body text-center">
+          <h1 class="card-title display-1">Oops!</h1>
+          <p class="card-text lead">Something went wrong.</p>
+          {% if is_admin %}
+          <pre class="text-start">{{ exception }}</pre>
+          {% endif %}
+          <a href="/" class="btn btn-primary mt-3">Go Home</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
