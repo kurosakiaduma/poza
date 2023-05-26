@@ -1,17 +1,63 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect 
+from django.urls import reverse_lazy, reverse
 from django.db.models import Count
 from datetime import datetime, timedelta
 from .models import *
 from django.contrib import messages
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
+from django.http.response import HttpResponseNotFound, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.forms import *
 from django.views.decorators.csrf import csrf_exempt
 from .forms import *
+import json, stripe, traceback
 
+stripe.api_key = "sk_test_51NC5ElIAYIz2PADTQg8hDIafDkmPsTjEIlbeu5qSJHDrSiduqzfRD3WlfiiF51ycgEg3pq0qOXV5zJNWZ7k2uFgU00fpJrVC9l"
 
+starter_subscription = stripe.Product.create(
+  name="Applicatio",
+  description="$12/Month subscription",
+)
+
+starter_subscription_price = stripe.Price.create(
+  unit_amount=1200,
+  currency="usd",
+  recurring={"interval": "month"},
+  product=starter_subscription['id'],
+)
+
+# Save these identifiers
+print(f"Success! Here is your starter subscription product id: {starter_subscription.name}")
+print(f"Success! Here is your starter subscription price id: {starter_subscription_price.id}")
+
+def index(request, **extra_fields):
+    """Function that render:
+    - the default home page for Anonymous Users
+    - index with booking and (conditionally) chatbot access links
+    - index with staff panel appended to default navbar links
+    - index with analytics and doc reg appened to default navbar links 
+
+    Args:
+        request : HTTP request object
+        **extra_fields : A dict that possibly contains the user account type as a kv pair.
+                         Attribute Errors are intercepted to display Anonymous User's default home page.
+    """
+    return render(request, "index.html",{})
+
+def custom_error_handler(request):
+    # Check if the user is an admin
+    is_admin = request.user.is_authenticated and request.user.is_staff
+
+    # Get the last exception
+    exception = traceback.format_exc()
+
+    # Render the error page with the error information
+    return render(request, "error.html", {
+        "is_admin": is_admin,
+        "exception": exception,
+    }, status=500)
 
 def getServices():
     services=[]
@@ -165,9 +211,6 @@ def service_times(service):
         
     return times    
 
-def index(request):
-    return render(request, "index.html",{})
-
 def assign_doctor(appears, doctors):
     """
     This function takes in two arguments:
@@ -268,7 +311,7 @@ def booking(request):
         request.session['times'] = times
         request.session['validWorkdays'] = validWorkdays
         
-        return redirect('bookingSubmit')
+        return redirect('create_appointment')
 
 
     return render(request, 'booking.html', {
@@ -276,7 +319,9 @@ def booking(request):
             'services': services,
         })
 
-def bookingSubmit(request):
+
+@csrf_exempt
+def create_appointment(request):
     """
     This function handles the submission of a booking request.
     :param request: The HTTP request object
@@ -300,7 +345,15 @@ def bookingSubmit(request):
     request.session['price'] = price
     print(f"{request.session['price']}")
 
+    
     if request.method == 'POST':
+        # Get data from form
+        date_day_time = request.POST.get('date_day_time')
+        date = date_day_time.split()[0]
+        day = date_day_time.split()[1]
+        time = " ".join(s for s in date_day_time.split()[2:])
+        print(f"{date_day_time.split()} {date} {time}")
+
         # Obtain all information data from objects pertaining to the same service
         appointments = Appointment.objects.filter(service=service)
 
@@ -321,19 +374,13 @@ def bookingSubmit(request):
 
         print(f"{appears} {doctors}\nASSIGNED DOCTOR-> {assigned_doctor}")
 
-        # Get the selected date, day and time from the submitted form data
-        date_day_time = request.POST.get('date_day_time')
-        date = date_day_time.split()[0]
-        day = date_day_time.split()[1]
-        time = " ".join(s for s in date_day_time.split()[2:])
-        print(f"{date_day_time.split()} {date} {time}")
-
+        # Create new Appointment object
         if service != None:
             if date <= maxDate and date >= minDate:
                 if day != "Friday" and day != "Sunday":
                     if Appointment.objects.filter(service=service, day=date, time=time).count() < 1:
                         # Create a new Appointment object using get_or_create method
-                        AppointmentForm = Appointment.objects.get_or_create(
+                        appointment= Appointment(
                             service=service,
                             day=date,
                             time=time,
@@ -341,9 +388,15 @@ def bookingSubmit(request):
                             uuid=user,
                             price=price
                         )
-                        validWorkdays.remove(date + ' ' + day + ' ' + time)
-                        messages.success(request, "Appointment Saved!")
-                        render(request, 'index.html', )
+                        # Serialize appointment data into JSON string
+                        appointment_data = json.dumps({
+                            'service': appointment.service,
+                            'price': appointment.price,
+                            'day': appointment.day,
+                            'time': appointment.time,
+                            'uuid': str(user.uuid),
+                            'assigned_doctor': appointment.assigned_doctor,
+                            })
                     else:
                         messages.success(request, "The Selected Time Has Been Reserved Before!")
                 else:
@@ -353,12 +406,103 @@ def bookingSubmit(request):
                 messages.success(request, "The Selected Date Isn't In The Correct Time Period!")
         else:
             messages.success(request, "Please Select A Service!")
-
-    return render(request, 'bookingSubmit.html', {
+        # Redirect to create_checkout_session view with appointment data
+        checkout_url = reverse('create_checkout_session') + f'?appointment_data={appointment_data}'
+        return redirect(checkout_url)
+    else:
+        # Render form template
+        return render(request, 'bookingSubmit.html', {
         'validWorkdays': validWorkdays,
         'service': service,
         'price': price,
     })
+    
+
+def create_checkout_session(request):
+    # Deserialize appointment data from JSON string
+    appointment_data = json.loads(request.GET.get('appointment_data'))
+
+    # Serialize appointment data into JSON string
+    appointment_data_str = json.dumps(appointment_data)
+
+    # Create Stripe checkout session
+    stripe.api_key = settings.STRIPE_TEST_SECRET_KEY
+    checkout_session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price_data': {
+                'currency': 'kes',
+                'product_data': {
+                    'name': appointment_data['service'],
+                },
+                'unit_amount': int(appointment_data['price'] * 100),
+            },
+            'quantity': 1,
+        }],
+        mode='payment',
+        success_url=request.build_absolute_uri(reverse('success') + f'?appointment_data={appointment_data_str}'),
+        cancel_url=request.build_absolute_uri(reverse('cancel') + f'?appointment_data={appointment_data_str}'),
+        metadata={
+            'service': appointment_data['service'],
+            'day': appointment_data['day'],
+            'time': appointment_data['time'],
+            'assigned_doctor': appointment_data['assigned_doctor'],
+            'user': request.user.name
+        }
+        )
+    # Redirect to Stripe checkout page
+    return redirect(checkout_session.url)
+
+def success(request):
+    """
+    This function handles the submission of a booking request.
+    :param request: The HTTP request object
+    """
+    user = request.user  # Get the current user from the request object
+    
+    # Deserialize appointment data from JSON string
+    appointment_data = json.loads(request.GET.get('appointment_data'))
+
+    # Get persona object for current user
+    persona = Persona.objects.get(uuid=user.uuid) 
+    # Create new Appointment object
+    appointment = Appointment.objects.create(
+        uuid=persona,
+        service=appointment_data['service'],
+        price=appointment_data['price'],
+        day=appointment_data['day'],
+        time=appointment_data['time'],
+        assigned_doctor=appointment_data['assigned_doctor']
+    )
+    messages.success(request, f"Appointment confirmed! For more details go to User -> Panel")
+    
+    # Render form template
+    return render(request, 'index.html')
+
+def cancel(request):
+    """
+    This function handles cancellation a booking request.
+    :param request: The HTTP request object
+    """
+    # Get stored data from django session:
+    service = request.session.get('service')
+    validWorkdays = request.session.get('validWorkdays')
+    
+
+    # Calculate the price for the selected service and store it in the session
+    price = pricing(service)
+    request.session['price'] = price
+    print(f"{request.session['price']}")
+    messages.warning(request, "Appointment was not saved! Please retry.")
+    
+    # Render form template
+    return render(request, 'bookingSubmit.html', {
+    'validWorkdays': validWorkdays,
+    'service': service,
+    'price': price,
+    })    
+    
+
 @csrf_exempt
 @login_required
 def userPanel(request, **extra_fields):
@@ -563,56 +707,61 @@ def staffPanel(request, **extra_fields):
 
     """
     user = request.user
-    if request.method == "POST":
-        app_id =  extra_fields.get('foo', None)
-        clicked_button = request.POST.get('button_id')
-        if clicked_button == "complete":
-            #Filter to retrieve only available times from each date before displaying them to the user            
-            note = request.POST.get("note")
-            patient = Appointment.objects.get(app_id=app_id).uuid.name
-            Appointment.objects.filter(app_id=app_id).update(
-                app_id=app_id,
-                note = note,
-                completed=True
-                )
-            appointment =  Appointment.objects.get(app_id=app_id)
-            from .signals import appointment_updated
-            appointment_updated(sender=Appointment, instance=appointment)
-            messages.success(request, f"Completed, and sent a note to {patient}")
-        elif clicked_button == "undo":
-            patient = Appointment.objects.get(app_id=app_id).uuid.name
-            Appointment.objects.filter(app_id=app_id).update(
-                app_id=app_id,
-                completed=False
-            )
-            messages.info(request, f"Confirmed, appointment with {patient} is not complete.")
-            
-        if request.META.get('HTTP_REFERER') == 'http://127.0.0.1:8000/staff-panel/past?':  
-            return redirect("http://127.0.0.1:8000/staff-panel/past?")     
-        else:
-            return redirect("staffPanel")
-        
-    today = datetime.today()
-
-    foo = extra_fields.get('foo', None)
     
-    if foo == "past":
-        minDate = (today - timedelta(days=30)).strftime('%Y-%m-%d')
-        maxDate = (today - timedelta(days=1)).strftime('%Y-%m-%d')
+    if user.is_authenticated:
+        if request.method == "POST":
+            app_id =  extra_fields.get('foo', None)
+            clicked_button = request.POST.get('button_id')
+            if clicked_button == "complete":
+                #Filter to retrieve only available times from each date before displaying them to the user            
+                note = request.POST.get("note")
+                patient = Appointment.objects.get(app_id=app_id).uuid.name
+                Appointment.objects.filter(app_id=app_id).update(
+                    app_id=app_id,
+                    note = note,
+                    completed=True
+                    )
+                appointment =  Appointment.objects.get(app_id=app_id)
+                from .signals import appointment_updated
+                appointment_updated(sender=Appointment, instance=appointment)
+                messages.success(request, f"Completed, and sent a note to {patient}")
+            elif clicked_button == "undo":
+                patient = Appointment.objects.get(app_id=app_id).uuid.name
+                Appointment.objects.filter(app_id=app_id).update(
+                    app_id=app_id,
+                    completed=False
+                )
+                messages.info(request, f"Confirmed, appointment with {patient} is not complete.")
+                
+            if request.META.get('HTTP_REFERER') == 'http://127.0.0.1:8000/staff-panel/past?':  
+                return redirect("http://127.0.0.1:8000/staff-panel/past?")     
+            else:
+                return redirect("staffPanel")
+            
+        today = datetime.today()
+
+        foo = extra_fields.get('foo', None)
         
-    else:
-        minDate = today.strftime('%Y-%m-%d')
-        maxDate = (today + timedelta(days=21)).strftime('%Y-%m-%d')
-   
-        
-    #Only show the Appointments 21 days from today
-    items = Appointment.objects.filter(day__range=[minDate, maxDate]).order_by('day', 'time')
-        
-    return render(request, 'staffPanel.html', {
-        'items':items,
-        "user": user,
-        "name": user.name,
-    })     
+        if foo == "past":
+            minDate = (today - timedelta(days=30)).strftime('%Y-%m-%d')
+            maxDate = (today - timedelta(days=1)).strftime('%Y-%m-%d')
+            
+        else:
+            minDate = today.strftime('%Y-%m-%d')
+            maxDate = (today + timedelta(days=21)).strftime('%Y-%m-%d')
+    
+            
+        #Only show the Appointments 21 days from today
+        items = Appointment.objects.filter(day__range=[minDate, maxDate]).order_by('day', 'time')
+            
+        return render(request, 'staffPanel.html', {
+            'items':items,
+            "user": user,
+            "name": user.name,
+        })
+    
+    return custom_error_handler(request)
+         
     
 def analytics(request):
     """

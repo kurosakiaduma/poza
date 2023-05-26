@@ -77,6 +77,26 @@ SERVICE_CHOICES = (
     ("Physician /Internal Medicine", "Physician / Internal Medicine"),
     ("Radiology", "Radiology"),
     )
+SERVICE_DESCS = (
+    ("Adult Cardiology", "General adult cardiologists diagnose and treat general problems that affect the heart and blood vessels."),
+    ("Adult Neurology", "A neurologist is a medical doctor who specializes in treating diseases of the nervous system."),
+    ("Anaesthesia", "Anaesthesia is a state of controlled, temporary loss of sensation or awareness that is induced for medical purposes."),
+    ("Anaesthesia and Critical Care Medicine", "Anaesthesia and critical care medicine involves the use of anaesthesia and other medical techniques to care for critically ill patients."),
+    ("Dermatology", "Dermatology is the branch of medicine dealing with the skin, hair, nails, and some cosmetic problems."),
+    ("Ear, Nose and Throat (ENT)", "An ENT doctor specializes in treating conditions that affect the ears, nose, and throat, as well as head and neck surgery."),
+    ("General Surgery", "General surgery is a surgical specialty that focuses on abdominal contents including esophagus, stomach, small intestine, large intestine, liver, pancreas, gallbladder, appendix and bile ducts."),
+    ("Gynaecology / Laparoscopic / Obsterics", "Gynaecology deals with the health of the female reproductive system. Laparoscopic surgery is a minimally invasive approach that allows the surgeon to operate without making a large incision. Obstetrics deals with pregnancy and childbirth."),
+    ("Interventional Cardiology", "Interventional cardiology is a branch of cardiology that deals specifically with the catheter-based treatment of structural heart diseases."),
+    ("Interventional Cardiology", "Interventional cardiology is a branch of cardiology that deals specifically with the catheter-based treatment of structural heart diseases."),
+    ("Nephrology", "Nephrology is a specialty of internal medicine that focuses on the treatment of diseases that affect the kidneys."),
+    ("Ophthalmology", "Ophthalmology is a branch of medicine and surgery which deals with the diagnosis and treatment of eye disorders."),
+    ("Paediatrics and Child Health", "Paediatrics and Child Health is a specialty that deals with the medical care of infants, children, and adolescents."),
+    ("Pain Management", "Pain Management is a medical approach that draws on disciplines in science and alternative healing to study the prevention, diagnosis, and treatment of pain."),
+    ("Physician /Internal Medicine", "Internal Medicine physicians are specialists who apply scientific knowledge and clinical expertise to the diagnosis, treatment, and compassionate care of adults across the spectrum from health to complex illness."),
+    ("Radiology", "Radiology is a medical specialty that uses imaging techniques such as X-rays, CT scans, and MRIs to diagnose and treat diseases and injuries."),
+    # ...
+)
+
 TIME_CHOICES = (
     ("8:00 AM", "8:00 AM"),
     ("9:00 AM", "9:00 AM"),
