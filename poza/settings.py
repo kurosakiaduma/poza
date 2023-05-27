@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    "whitenoise.runserver_nostatic",    
     "djstripe", # Django's STRIPE API integration
     "booking" ,# Booking
     "chat", # MediBot microservice
@@ -56,7 +57,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'booking.middlewares.AjaxMiddleware', 
+    'whitenoise.runserver_nostatic',    
+    "booking.middlewares.AjaxMiddleware", 
 ]
 
 ROOT_URLCONF = "poza.urls"
@@ -144,6 +146,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'chat' / 'static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Authentication Backends
 AUTHENTICATION_BACKENDS = [
