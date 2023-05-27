@@ -52,7 +52,7 @@
 
 <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
     {% if user.account_type == "DOCTOR" %}
-    <h2 class="text-center">Dr. {{ first_name }} {{ last_name }}  <img src="http://127.0.0.1:8887/uploads/{{image}}" alt="Profile Image", height="100", width="100"></h2>
+    <h2 class="text-center">Dr. {{ first_name }} {{ last_name }}  <img src="{% static image %}" alt="Profile Image", height="100", width="100"></h2>
     {% elif user.account_type == "ADMIN" %}
     <h2 class="">Admin Info:</h2>
     {% else %}

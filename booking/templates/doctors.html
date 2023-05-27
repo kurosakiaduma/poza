@@ -7,7 +7,11 @@
     <div class="col-sm-4">
       <div class="card mb-3 shadow-sm">
         <!-- Card image -->
-        <img src="{% static  doc.image  %}" class="card-img-top" alt="{{ doc.name }}" style="height: 200px; object-fit:contain;">
+        {% if doc.image %}
+        <img src="{% static doc.image %}" class="card-img-top" alt="{{ doc.name }}" style="height: 200px; object-fit:contain;">
+        {% else %}
+        <!-- Handle the case where doc.image is not set -->
+        {% endif %}
         <!-- Card body -->
         <div class="card-body">
           <!-- Card title -->

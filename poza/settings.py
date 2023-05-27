@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    "whitenoise.runserver_nostatic",    
+    'whitenoise.runserver_nostatic',
     "djstripe", # Django's STRIPE API integration
     "booking" ,# Booking
     "chat", # MediBot microservice
@@ -57,7 +57,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'whitenoise.runserver_nostatic',    
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "booking.middlewares.AjaxMiddleware", 
 ]
 
