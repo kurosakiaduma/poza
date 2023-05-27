@@ -27,7 +27,7 @@ def index(request, **extra_fields):
     """
     return render(request, "index.html",{})
 
-def custom_error_handler(request):
+def custom_error_handler(request, exception):
     # Check if the user is an admin
     is_admin = request.user.is_authenticated and request.user.is_staff
 

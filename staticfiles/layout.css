@@ -1,0 +1,37 @@
+footer, footer * {
+    transform: scale(1.0);
+    padding-top: 0;
+    
+}
+
+footer .container-fluid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    font-family: 'Google Sans', Verdana, sans-serif;
+}
+
+footer .row {
+    margin: 0;
+}
+
+footer .col-md-4 {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+
+
+footer p,
+footer h1,
+footer h5{
+    margin: 0.5rem 0;
+}
+
+footer img  {
+    max-width: 100%;
+    max-height: 100%;
+    height: auto;
+    margin-top: -20%;
+}
