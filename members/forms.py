@@ -1,4 +1,4 @@
-from tkinter import Widget
+
 from django.contrib.auth.forms import UserCreationForm
 from booking.models import Persona, Doctor, SERVICE_CHOICES, GENDER_CHOICES, ACCOUNT_CHOICES
 from django import forms
@@ -18,6 +18,11 @@ class RegisterUserForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
             super(RegisterUserForm, self).__init__(*args, **kwargs)
             self.fields['name'].widget.attrs['class'] = 'form-control form-control-lg'
+            self.fields['birth_date'].widget.attrs['class'] = 'form-control form-control-lg'
+            self.fields['gender'].widget.attrs['class'] = 'form-control form-control-lg'
+            self.fields['phone_no'].widget.attrs['class'] = 'form-control form-control-lg'
+            self.fields['kin_name'].widget.attrs['class'] = 'form-control form-control-lg'
+            self.fields['kin_contact'].widget.attrs['class'] = 'form-control form-control-lg'
             self.fields['password1'].widget.attrs['class'] = 'form-control form-control-lg'
             self.fields['password2'].widget.attrs['class'] = 'form-control form-control-lg'
 
