@@ -1,11 +1,8 @@
-* {
-    font-family: Verdana, sans-serif;
-
-}
 
 #clock {
-    margin-left: 50px;
-    font-size: large;
+    font-family: Verdana, sans-serif;
+    margin-left: 20px;
+    
 }
 
 footer, footer * {

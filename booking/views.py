@@ -848,8 +848,8 @@ def analytics(request):
 
     
     # Group the data by day and service and calculate the average price for each group
-    df_grouped = df.groupby(["day", "service"]).mean().reset_index()
-
+    df_grouped = df.groupby(["day", "service"])["price"].mean().reset_index()
+    
     # Create a bar chart showing the average price for each service on each day of the week
     fig = px.bar(df_grouped, x="day", y="price", color="service", template="plotly_dark",
                 title="Average Price by Service and Day of the Week", labels={"price": "Price (KES)"})
@@ -859,8 +859,8 @@ def analytics(request):
     df["completed"] = df["completed"].astype(int)
 
     # Group the data by day and service and calculate the percentage of appointments that were completed for each group
-    df_grouped = df.groupby(["day", "service"]).mean().reset_index()
-
+    df_grouped = df.groupby(["day", "service"])["completed"].mean().reset_index()
+    
     # Create a pie chart showing the percentage of appointments that were completed for each service on each day of the week
     fig = px.pie(df_grouped, names="service", values="completed", color="service", template="plotly_dark",
                 title="Percentage of Completed Appointments by Service and Day")
@@ -874,8 +874,8 @@ def analytics(request):
     df["time_to_appointment"] = abs((df["time_ordered"] - df["datetime"]).dt.days)
 
     # Group the data by service and calculate the average time for each group
-    df_grouped = df.groupby("service").mean().reset_index()
-
+    df_grouped = df.groupby("service")["time_to_appointment"].mean().reset_index()
+    
     # Create a line chart showing the average time between when an appointment was ordered and when it was scheduled to take place for each service
     fig = px.line(df_grouped, x="service", y="time_to_appointment", template="plotly_dark",
     title="Average Time Between Order and Appointment by Service",
