@@ -68,6 +68,7 @@
             <li class="list-group mt-2">Gender: {{ user.gender}}</li>
     </ul>
 </div>
+
 <!--Appointment Loop-->
 {% if appointments.count > 0 %}
 <div class="mt-5 ">
@@ -85,11 +86,11 @@
             <button type="submit" class="btn btn-success text-light mx-2 shadow" id="past">Past</button>
           </form>
         </div>
-      </div>      
+    </div>      
     {% for appointment in appointments %}
-    <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black  m-5 ">
+    <div class="shadow p-4 mb-5 bg-body bg-body rounded text-black m-5 ">
         <div class="row">
-            <div class="col">
+            <div class="col-md-6 order-md-1 order-2">
                 <div class="list-group fs-4 border p-3 mb-3">
                     <p class="list-group mt-2 danger" style="font-weight: bold;">Appointment Reference Number: {{ appointment.app_id }}</p>
                     <hr>
@@ -103,7 +104,7 @@
                     </div>    
                 </div>
             </div>    
-            <div class="col">
+            <div class="col-md-6 order-md-2 order-1">
                 <div class="list-group fs-4 border p-3 mb-3"> 
                     <style>
                         #note {

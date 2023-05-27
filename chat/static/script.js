@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', function(){
-
     document.querySelector('#submitBtn').addEventListener('click', () => chat_ajax());
-
 });
 
 function chat_ajax(){

@@ -13,7 +13,7 @@
         <meta name="theme-color" content="#ffffff">
         
         <!--Favicon -->
-        <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
+        <link rel="icon" type="image/png" href="{% static 'favicon.ico' %}"/>
         <!-- Apple Touch Icon for iOS devices -->
         <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
         <!-- Favicon for modern browsers -->
@@ -24,13 +24,11 @@
         <!-- Safari Pinned Tab Icon -->
         <link rel="mask-icon" href="{% static 'safari-pinned-tab.svg' %}" color="#5bbad5">
         <!-- Favicon for older browsers -->
-        <link type="favicon" rel="shortcut icon" href="{% static 'favicon.ico' %}">
+        <link type="favicon" rel="icon" href="{% static 'favicon.ico' %}">
+        
         <!-- CSS only -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        
-        <!-- layout.css -->
-        <link type="text/css" rel="stylesheet" href="{% static 'layout.css' %}">
         
         <!-- Animate.css library -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
@@ -50,6 +48,10 @@
         <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
         <!-- AJAX Descriptor for the CHATGPT endpoint -->
         <script type="text/javascript" src="{% static 'ajax.js'%}" defer></script>
+
+        <!-- layout.css -->
+        <link type="text/css" rel="stylesheet" href="{% static 'layout.css' %}">
+
         <!--My JS-->
         <script src="{% static 'script.js' %}" type="text/javascript" defer></script>
 
@@ -119,6 +121,9 @@
                                     </li>
                                 </ul>
                             </li>
+                            <li class="nav-item ml-auto">
+                                <span class="nav-link active cHover" id="clock"></span>
+                            </li>
                             {% else %}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -128,7 +133,8 @@
                                 <li><a class="dropdown-item" href="{% url 'login' %}">Log in</a></li>
                                 <li><a class="dropdown-item" href="{% url 'register' %}">Sign up</a></li>
                                 </ul>
-                            </li>   {% endif %}
+                            </li>   
+                            {% endif %}
                         </ul>
                     </div>
                 </div>
@@ -217,6 +223,15 @@
                 </div>
                 </section>
             </div>
-        </footer>    
+        </footer>
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('clock').textContent = time;
+        }
+    
+        setInterval(updateTime, 1000);
+    </script>    
     </body>
 </html>
