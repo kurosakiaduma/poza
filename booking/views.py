@@ -13,6 +13,7 @@ from django.forms import *
 from django.views.decorators.csrf import csrf_exempt
 from .forms import *
 import json, stripe, traceback
+
 def index(request, **extra_fields):
     """Function that render:
     - the default home page for Anonymous Users

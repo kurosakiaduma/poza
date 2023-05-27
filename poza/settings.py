@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
-import django_pesapal
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,12 +39,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    "django_extensions",
     "djstripe", # Django's STRIPE API integration
     "booking" ,# Booking
     "chat", # MediBot microservice
     "members", # Registration service
-    'queryset_sequence', # Queryset filtering service
     'ajax_select',  #Caching service
 ]
 

@@ -2,7 +2,6 @@ from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from .models import Appointment, Notification
 from datetime import datetime
-import pytz
 
 @receiver(pre_save, sender=Appointment)
 @receiver(post_save, sender=Appointment)
