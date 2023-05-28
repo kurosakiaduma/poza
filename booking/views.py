@@ -3,6 +3,7 @@ from django.urls import reverse_lazy, reverse
 from django.db.models import Count
 from datetime import datetime, timedelta
 from .models import *
+from django.core.paginator import Paginator
 from django.contrib import messages
 from django.conf import settings
 from django.conf.urls.static import static
@@ -13,6 +14,7 @@ from django.forms import *
 from django.views.decorators.csrf import csrf_exempt
 from .forms import *
 import json, stripe, traceback
+from asgiref.sync import sync_to_async
 
 def index(request, **extra_fields):
     """Function that render:
@@ -917,9 +919,21 @@ def doctors(request):
     # Get all Doctor objects
     docs = Doctor.objects.all()
     
-    for doc in docs:
-        # Access the role field
-        print(doc.image) 
+    # Create a Paginator object with the retrieved Doctor objects
+    paginator = Paginator(docs, 6) # Show 6 doctors per page
+    
+    # Get the current page number from the request's GET parameters
+    page_number = request.GET.get('page')
+    
+    # Set the default page number to 1 if not provided in the request
+    if not page_number:
+        page_number = 1
+    
+    # Get the Page object for the current page
+    page_obj = paginator.get_page(page_number)
+    
+    print(f'{docs}\n{paginator}\n{page_number}\n{page_obj}')
+    # Render the template with the Page object
     return render(request, "doctors.html", {
-        "docs": docs,
+        "page_obj": page_obj,
     })

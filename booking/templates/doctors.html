@@ -1,14 +1,15 @@
 {% extends 'layout.html' %}
 {% load static %}
+
 {% block body %}
 <div class="container">
   <div class="row">
-    {%for doc in docs%}
+    {% for doc in page_obj %}
     <div class="col-sm-4">
       <div class="card mb-3 shadow-sm">
         <!-- Card image -->
         {% if doc.image %}
-        <img src="{% static doc.image %}" class="card-img-top" alt="{{ doc.name }}" style="height: 200px; object-fit:contain;">
+        <img src="{% static doc.image %}" class="card-img-top" alt="{{ doc.name }}" style="height: 200px; object-fit: contain;">
         {% else %}
         <!-- Handle the case where doc.image is not set -->
         {% endif %}
@@ -26,4 +27,72 @@
     {% endfor %}
   </div>
 </div>
+
+<!-- Pagination -->
+<nav class="pagination-container">
+  <ul class="pagination justify-content-end">
+    {% if page_obj.has_previous %}
+    <li class="page-item">
+      <a class="page-link" href="?page=1" aria-label="First">
+        <span aria-hidden="true">&laquo;</span>
+      </a>
+    </li>
+    <li class="page-item">
+      <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+        <span aria-hidden="true">&lsaquo;</span>
+      </a>
+    </li>
+    {% else %}
+    <li class="page-item disabled">
+      <a class="page-link" href="#" tabindex="-1" aria-disabled="true">&laquo;</a>
+    </li>
+    <li class="page-item disabled">
+      <a class="page-link" href="#" tabindex="-1" aria-disabled="true">&lsaquo;</a>
+    </li>
+    {% endif %}
+
+    {% for i in page_obj.paginator.page_range %}
+    {% if page_obj.number == i %}
+    <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+    {% else %}
+    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+    {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+        <span aria-hidden="true">&rsaquo;</span>
+      </a>
+    </li>
+    {% else %}
+    <li class="page-item disabled">
+      <a class="page-link" href="#" tabindex="-1" aria-disabled="true">&rsaquo;</a>
+    </li>
+    <li class="page-item disabled">
+      <a class="page-link" href="#" tabindex="-1" aria-disabled="true">&raquo;</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+<script>
+  $(document).ready(function() {
+    var paginationContainer = $(".pagination-container");
+    var footer = $("footer");
+
+    $(window).scroll(function() {
+      var windowHeight = $(window).height();
+      var scrollTop = $(window).scrollTop();
+      var footerOffset = footer.offset().top;
+      var paginationContainerHeight = paginationContainer.outerHeight();
+
+      if (scrollTop + windowHeight < footerOffset - paginationContainerHeight) {
+        paginationContainer.addClass("show-pagination");
+      } else {
+        paginationContainer.removeClass("show-pagination");
+      }
+    });
+  });
+</script>
+
 {% endblock %}
