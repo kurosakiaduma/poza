@@ -24,7 +24,7 @@ def chat(request):
         pass
     else:
         messages.warning(request, "You don't have access to MediBot. Access is limited to users who have made an appointment in the last 24 hours.")
-        return redirect("http://127.0.0.1:8000/")
+        return redirect('index')
     chats = Chat.objects.all()
     
     return render(request, 'chat.html', {
