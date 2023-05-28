@@ -1,3 +1,7 @@
+.navbar {
+    position: sticky;
+    top: 0;
+  }
 
 #clock {
     font-family: Verdana, sans-serif;

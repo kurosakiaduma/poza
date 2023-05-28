@@ -26,8 +26,8 @@ SECRET_KEY = "django-insecure-tb@$=(h+a6t$u)2kq86+o)c+94y!+t-5(7&s%o6*efxt0$+9@=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['web-production-756f9.up.railway.app', 'localhost', '127.0.0.1']
-CSRF_TRUSTED_ORIGINS = ['https://web-production-756f9.up.railway.app', 'http://web-production-756f9.up.railway.app', 
+ALLOWED_HOSTS = ['poza.up.railway.app', 'localhost', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://poza.up.railway.app', 'http://poza.up.railway.app', 
                         'http://localhost', 'https://localhost', 
                         'http://127.0.0.1', 'https://127.0.0.1']
 
