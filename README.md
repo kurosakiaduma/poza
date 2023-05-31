@@ -57,7 +57,7 @@
 `git checkout -b feature/your-feature`
 2. Commit your changes and push to the branch
 ```
-git commit -am 'Add some feature'
+git commit -am 'Add some feature' \n
 git push origin feature/your-feature
 ```
 3. Create a pull request with a detailed description of your changes.
