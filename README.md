@@ -15,9 +15,11 @@
 - [Acknowledgments](#acknowledgments)
 
 ## Installation
-`git clone https://github.com/kurosakiaduma/poza.git`
-`cd poza`
-`python -m venv venv`
+```
+git clone https://github.com/kurosakiaduma/poza.git
+cd poza
+python -m venv venv
+```
 
 ### For Windows:
 `.\poza\Scripts\activate`
@@ -26,9 +28,11 @@
 `source poza/Scripts/activate`
 
 ### Continue:
-`pip install -r requirements.txt`
-`python manage.py migrate`
-`python manage.py runserver`
+```
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
 
 
 ## Usage
@@ -57,7 +61,7 @@
 `git checkout -b feature/your-feature`
 2. Commit your changes and push to the branch
 ```
-git commit -am 'Add some feature' \n
+git commit -am 'Add some feature'
 git push origin feature/your-feature
 ```
 3. Create a pull request with a detailed description of your changes.
