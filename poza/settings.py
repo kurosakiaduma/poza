@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "chat", # MediBot microservice
     "members", # Registration service
     'ajax_select',  #Caching service
+    "django_extensions", #ModelGraphs
 ]
 
 MIDDLEWARE = [

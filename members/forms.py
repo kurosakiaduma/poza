@@ -46,6 +46,7 @@ class RegisterDoctorForm(UserCreationForm):
             self.fields['birth_date'].widget.attrs['class'] = 'form-control form-control-lg'
             self.fields['account_type'].widget.attrs['class'] = 'form-control form-control-lg'
             self.fields['gender'].widget.attrs['class'] = 'form-control form-control-lg'
+            self.fields['phone_no'].widget.attrs['class'] = 'form-control form-control-lg'
             self.fields['role'].widget.attrs['class'] = 'form-control form-control-lg'
             self.fields['image'].widget.attrs['class'] = 'form-control form-control-lg'
             self.fields['image'].required = False

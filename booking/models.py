@@ -166,6 +166,7 @@ class Persona(AbstractUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['password']
     
+    
     def __str__(self):
         return self.email
     
@@ -186,7 +187,7 @@ class Doctor(Persona):
     image = models.ImageField(upload_to='profiles', verbose_name='Images')
     def __str__(self):
         return self.email
-
+    
     def get_absolute_url(self):
         return reverse('doctor-detail', kwargs={'uuid': self.uuid})
 
@@ -202,6 +203,8 @@ class Appointment(models.Model):
     price = models.PositiveIntegerField()
     note = models.TextField(default="")
     completed = models.BooleanField(default=False)
+    
+    
     def __str__(self):
         return f"{self.app_id}| {self.uuid.name} | {self.service} |day: {self.day} | time: {self.time}| price: {self.price} | {self.note}"
 
