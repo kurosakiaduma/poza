@@ -15,6 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .forms import *
 import json, stripe, traceback
 from asgiref.sync import sync_to_async
+import secrets
 
 def index(request, **extra_fields):
     """Function that render:
@@ -225,8 +226,7 @@ def assign_doctor(appears, doctors):
     else:
         # If it is not, try to randomly select an index from the 'doctors' list
         try:
-            from random import randint
-            idx = randint(0, (len(doctors)-1))
+            idx = secrets.SystemRandom().randint(0, (len(doctors)-1))
             print(f"THIS IS THE IDX ==>{idx}")
             assigned_doctor = doctors[idx]
         except IndexError:
