@@ -89,7 +89,7 @@ def register_user(request):
                 return redirect('index')
     else:
         if request.user.is_superuser:
-            print(f"Form not valid")
+            print("Form not valid")
             form = RegisterDoctorForm()
         else:
             form = RegisterUserForm()

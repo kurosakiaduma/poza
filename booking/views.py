@@ -458,7 +458,7 @@ def success(request):
         time=appointment_data['time'],
         assigned_doctor=appointment_data['assigned_doctor']
     )
-    messages.success(request, f"Appointment confirmed! For more details go to User -> Panel")
+    messages.success(request, "Appointment confirmed! For more details go to User -> Panel")
     
     # Render form template
     return render(request, 'index.html')
